@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>HIIT Program Assistant</title>
+    <style>
+        /* ====================
+           CSS RESET & BASE STYLES
+           ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            /* Primary Colors - Dark Theme */
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --tertiary-bg: #2d2d2d;
+            --card-bg: #252525;
+            
+            /* Accent Colors */
+            --accent-primary: #ff4757;
+            --accent-secondary: #3498db;
+            --accent-success: #2ed573;
+            --accent-warning: #f39c12;
+            --accent-info: #9b59b6;
+            
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #888888;
+            
+            /* Spacing */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            
+            /* Border Radius */
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            
+            /* Shadows */
+            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: var(--spacing-md);
+            overflow-x: hidden;
+            /* Prevent overscroll bounce on iOS */
+            overscroll-behavior: none;
+        }
+
+        /* ====================
+           LAYOUT CONTAINERS
+           ==================== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-heavy);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .header-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .header-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.05);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+        }
+
+        /* Main Content Grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .main-content {
+                grid-template-columns: 3fr 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-medium);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--accent-secondary);
+        }
+
+        /* ====================
+           INTERVAL DISPLAY SECTION
+           ==================== */
+        .current-interval {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interval-transition {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 71, 87, 0.3), transparent);
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-slow);
+        }
+
+        .interval-transition.active {
+            opacity: 1;
+            animation: pulseTransition 2s ease-in-out;
+        }
+
+        @keyframes pulseTransition {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .interval-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .interval-type {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            background: rgba(255, 71, 87, 0.1);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: 50px;
+            border: 2px solid var(--accent-primary);
+        }
+
+        /* NEW: Multi-level config display */
+        .interval-config {
+            background: rgba(255, 255, 255, 0.05);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .config-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            border-left: 3px solid var(--accent-info);
+        }
+
+        .config-label {
+            font-size: 0.9rem;
+            color: var(--accent-info);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .config-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        /* NEW: Multi-level style */
+        .config-level {
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--spacing-sm);
+            margin: var(--spacing-xs) 0;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent-success);
+        }
+
+        .config-level-title {
+            font-size: 0.9rem;
+            color: var(--accent-success);
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .config-level-value {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Countdown Timer */
+        .countdown-timer {
+            text-align: center;
+            margin: var(--spacing-xl) 0;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--accent-success);
+            text-shadow: 0 0 20px rgba(46, 213, 115, 0.3);
+            margin-bottom: var(--spacing-md);
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 3rem;
+            }
+        }
+
+        .timer-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .timer-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-warning));
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        /* NEW: Total Duration Timer */
+        .total-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .total-timer-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .total-timer-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid var(--accent-warning);
+            margin-top: var(--spacing-lg);
+        }
+
+        .notes-title {
+            color: var(--accent-warning);
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .notes-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ====================
+           NEXT INTERVAL SECTION
+           ==================== */
+        .next-interval {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .next-interval-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .next-interval-badge {
+            background: var(--accent-secondary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ====================
+           CONTROLS SECTION
+           ==================== */
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        /* Primary Controls */
+        .primary-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .control-btn {
+            padding: var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 60px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn-play {
+            background: linear-gradient(135deg, var(--accent-success), #1abc9c);
+            color: white;
+        }
+
+        .control-btn-pause {
+            background: linear-gradient(135deg, var(--accent-warning), #e67e22);
+            color: white;
+        }
+
+        .control-btn-restart {
+            background: linear-gradient(135deg, var(--accent-primary), #ff3838);
+            color: white;
+        }
+
+        /* Seek Slider */
+        .seek-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .seek-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .seek-slider {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .seek-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            border: 3px solid var(--accent-primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .seek-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            border: 3px solid var(--accent-primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .seek-time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* JSON Loader */
+        .json-loader {
+            margin-top: var(--spacing-lg);
+        }
+
+        .json-input-container {
+            display: none;
+            margin-top: var(--spacing-md);
+        }
+
+        .json-textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            padding: var(--spacing-md);
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .json-textarea:focus {
+            outline: none;
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        /* ====================
+           INTERVAL LIST SECTION
+           ==================== */
+        .interval-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .interval-list-header {
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 10;
+            padding-bottom: var(--spacing-md);
+        }
+
+        .interval-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .interval-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(4px);
+        }
+
+        .interval-item.active {
+            background: rgba(52, 152, 219, 0.15);
+            border-left-color: var(--accent-secondary);
+        }
+
+        .interval-item.past {
+            opacity: 0.6;
+        }
+
+        .interval-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .interval-item-type {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .interval-item-duration {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ====================
+           MODALS & NOTIFICATIONS
+           ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .modal-title {
+            color: var(--accent-primary);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .modal-message {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            min-width: 120px;
+        }
+
+        .modal-btn-confirm {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-btn-secondary {
+            background: var(--accent-info);
+            color: white;
+        }
+
+        /* Validation Error Modal */
+        .validation-modal .modal-content {
+            border: 2px solid var(--accent-primary);
+        }
+
+        .validation-details {
+            background: rgba(255, 71, 87, 0.1);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            margin-top: var(--spacing-md);
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Confirmation Modal */
+        .confirmation-modal .modal-content {
+            border: 2px solid var(--accent-warning);
+        }
+
+        .confirmation-options {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            margin-top: var(--spacing-lg);
+        }
+
+        /* ====================
+           SCREEN WAKE LOCK BANNER
+           ==================== */
+        .wake-lock-banner {
+            background: linear-gradient(135deg, #1a5276, #2980b9);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            display: none;
+        }
+
+        .wake-lock-text {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .wake-lock-icon {
+            font-size: 1.2rem;
+        }
+
+        /* ====================
+           WELCOME STATE
+           ==================== */
+        .welcome-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--border-radius-lg);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            margin: var(--spacing-xl) 0;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+            color: var(--accent-secondary);
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            color: var(--accent-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .welcome-description {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ====================
+           UTILITY CLASSES
+           ==================== */
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .mb-sm { margin-bottom: var(--spacing-sm); }
+        .mb-md { margin-bottom: var(--spacing-md); }
+        .mb-lg { margin-bottom: var(--spacing-lg); }
+        .mt-sm { margin-top: var(--spacing-sm); }
+        .mt-md { margin-top: var(--spacing-md); }
+        .mt-lg { margin-top: var(--spacing-lg); }
+        .hidden { display: none !important; }
+
+        /* ====================
+           RESPONSIVE ADJUSTMENTS
+           ==================== */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-sm);
+            }
+            
+            .header-top {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .primary-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-btn {
+                min-height: 50px;
+            }
+            
+            .interval-type {
+                font-size: 1.2rem;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-actions {
+                flex-direction: column;
+            }
+
+            .total-timer-display {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timer-display {
+                font-size: 2.5rem;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* ====================
+           ANIMATIONS
+           ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .slide-in-up {
+            animation: slideInUp 0.3s ease forwards;
+        }
+
+        /* ====================
+           STATUS INDICATORS
+           ==================== */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: var(--accent-success);
+            box-shadow: 0 0 10px var(--accent-success);
+        }
+
+        .status-paused {
+            background: var(--accent-warning);
+            box-shadow: 0 0 10px var(--accent-warning);
+        }
+
+        .status-stopped {
+            background: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        /* ====================
+           LOADING INDICATOR
+           ==================== */
+        .loading-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-secondary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Wake Lock Banner -->
+        <div class="wake-lock-banner" id="wakeLockBanner">
+            <div class="wake-lock-text">
+                <span class="wake-lock-icon">🔒</span>
+                <span>Screen will stay awake during workout</span>
+            </div>
+        </div>
+
+        <!-- Welcome State (Initially Visible) -->
+        <div class="welcome-state" id="welcomeState">
+            <div class="welcome-icon">🏋️‍♂️</div>
+            <h2 class="welcome-title">HIIT Program Assistant</h2>
+            <p class="welcome-description">
+                Load a workout plan to get started. You can load a sample workout or paste your own JSON workout plan.
+            </p>
+            <div class="welcome-actions">
+                <button class="control-btn" id="loadSampleBtn" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                    📋 Load Sample Workout
+                </button>
+                <button class="control-btn" id="loadJsonBtn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                    📁 Load Custom JSON
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Workout Interface (Initially Hidden) -->
+        <div id="workoutInterface" class="hidden">
+            <!-- Header Section -->
+            <header class="header">
+                <div class="header-top">
+                    <div class="header-info">
+                        <h1 id="classTitle">Endurance Treadmill Run for Knee Strength</h1>
+                        <div class="class-meta">
+                            <div class="status-indicator status-stopped" id="statusIndicator"></div>
+                            <span id="classStatus">Ready to Start</span>
+                        </div>
+                    </div>
+                    <div class="total-timer-container">
+                        <div class="total-timer-label">Total Remaining</div>
+                        <div class="total-timer-display" id="totalRemainingTime">45:00</div>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div>
+                        <div class="text-muted">User Info</div>
+                        <div id="userInfo">36 years, 73 kg, 5'10"</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Location</div>
+                        <div id="userLocation">Carrollton, TX</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Date</div>
+                        <div id="classDate">July 16, 2024</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Class Duration</div>
+                        <div id="classDuration">45 min</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Left Column: Current Interval & Next Interval -->
+                <div class="left-column">
+                    <!-- Current Interval -->
+                    <div class="card current-interval">
+                        <div class="interval-transition" id="intervalTransition"></div>
+                        
+                        <div class="interval-header">
+                            <div class="interval-type" id="currentIntervalType">Treadmill Warm-up</div>
+                            <div class="interval-progress">
+                                <span id="currentIntervalProgress">1 of 8</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Countdown Timer -->
+                        <div class="countdown-timer">
+                            <div class="timer-display" id="intervalTimer">05:00</div>
+                            <div class="timer-progress">
+                                <div class="timer-progress-bar" id="timerProgressBar"></div>
+                            </div>
+                            <div class="text-muted">Interval Remaining</div>
+                        </div>
+                        
+                        <!-- Interval Configuration -->
+                        <div class="interval-config">
+                            <div class="config-grid" id="currentIntervalConfig">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                        
+                        <!-- Notes Section -->
+                        <div class="notes-section" id="currentIntervalNotes">
+                            <div class="notes-title">Notes</div>
+                            <div class="notes-content">
+                                For harder effort: 4.0 mph | For careful effort: 4.5 mph
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Next Interval -->
+                    <div class="card next-interval mt-lg">
+                        <div class="next-interval-header">
+                            <h2 class="card-title">Next Up</h2>
+                            <span class="next-interval-badge">Next Interval</span>
+                        </div>
+                        <div class="next-interval-content">
+                            <h3 id="nextIntervalType">Endurance Run</h3>
+                            <div class="interval-config mt-md" id="nextIntervalConfig">
+                                <!-- Dynamically populated -->
+                            </div>
+                            <div class="notes-section mt-md" id="nextIntervalNotes">
+                                <div class="notes-title">Preparation</div>
+                                <div class="notes-content">
+                                    Prepare for endurance run
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Controls & Interval List -->
+                <div class="right-column">
+                    <!-- Controls Section -->
+                    <div class="controls-section">
+                        <!-- Primary Controls -->
+                        <div class="primary-controls">
+                            <button class="control-btn control-btn-play" id="playBtn">
+                                ▶ Play
+                            </button>
+                            <button class="control-btn control-btn-pause" id="pauseBtn">
+                                ⏸ Pause
+                            </button>
+                            <button class="control-btn control-btn-restart" id="restartBtn">
+                                ↻ Restart
+                            </button>
+                        </div>
+                        
+                        <!-- Seek Slider -->
+                        <div class="card seek-section">
+                            <h3 class="card-title">Seek Control</h3>
+                            <div class="seek-header">
+                                <span>Class Progress</span>
+                                <span id="seekPercentage">0%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="0" class="seek-slider" id="seekSlider">
+                            <div class="seek-time-display">
+                                <span id="currentTime">00:00:00</span>
+                                <span id="totalTime">00:45:00</span>
+                            </div>
+                        </div>
+                        
+                        <!-- JSON Loader -->
+                        <div class="card json-loader">
+                            <h3 class="card-title">Load New Workout</h3>
+                            <div class="button-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="control-btn" id="loadNewSampleBtn" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                                    📋 Load Sample
+                                </button>
+                                <button class="control-btn" id="loadNewJsonBtn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                                    📁 Load Custom
+                                </button>
+                            </div>
+                            <div class="json-input-container" id="jsonInputContainer">
+                                <textarea class="json-textarea" id="jsonTextarea" placeholder='Paste your JSON workout plan here...'></textarea>
+                                <div class="form-buttons" style="display: flex; gap: 10px; margin-top: var(--spacing-md);">
+                                    <button class="control-btn" id="cancelJsonBtn" style="background: rgba(255, 255, 255, 0.1);">Cancel</button>
+                                    <button class="control-btn" id="parseJsonBtn" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                                        Parse & Load
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Interval List -->
+                    <div class="card interval-list">
+                        <div class="interval-list-header">
+                            <h3 class="card-title">Interval List</h3>
+                            <div class="text-muted" id="intervalListCount">8 intervals</div>
+                        </div>
+                        <div id="intervalListContainer">
+                            <!-- Interval items will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Validation Error Modal -->
+    <div class="modal validation-modal" id="validationModal">
+        <div class="modal-content">
+            <h2 class="modal-title">⚠️ Validation Error</h2>
+            <div class="modal-message" id="validationMessage">
+                The total duration of intervals doesn't match the class duration.
+            </div>
+            <div class="validation-details" id="validationDetails">
+                <!-- Validation details will be shown here -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-confirm" id="validationOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal confirmation-modal" id="confirmationModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="confirmationTitle">Confirm Action</h2>
+            <div class="modal-message" id="confirmationMessage">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="confirmation-options">
+                <button class="modal-btn modal-btn-cancel" id="confirmationCancelBtn">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="confirmationConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <h2 class="modal-title">✅ Success</h2>
+            <div class="modal-message" id="successMessage">
+                Workout plan loaded successfully!
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-confirm" id="successOkBtn">Start Workout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Loading</h2>
+            <div class="modal-message text-center">
+                <div class="loading-indicator" style="margin: 0 auto 20px;"></div>
+                <div>Processing workout plan...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // HIIT PROGRAM ASSISTANT - MAIN APPLICATION
+        // =============================================
+
+        // =============================================
+        // CONSTANTS AND GLOBAL VARIABLES
+        // =============================================
+        class HIITProgramAssistant {
+            constructor() {
+                // App state
+                this.state = {
+                    isPlaying: false,
+                    currentIntervalIndex: 0,
+                    currentTime: 0, // in seconds
+                    totalElapsedTime: 0, // in seconds
+                    intervalTimer: null,
+                    wakeLock: null,
+                    workoutData: null,
+                    isWorkoutLoaded: false,
+                    autoContinue: true, // Track if we should auto-continue
+                    wasPlayingBeforeAction: false // NEW: Track if workout was playing before an action
+                };
+                
+                // DOM Elements
+                this.elements = {};
+                
+                // Audio context for interval transition sounds
+                this.audioContext = null;
+                
+                // Confirmation callback storage
+                this.confirmationCallback = null;
+                
+                // Initialize the app
+                this.initialize();
+            }
+            
+            // =============================================
+            // INITIALIZATION METHODS
+            // =============================================
+            
+            /**
+             * Main initialization method
+             * Sets up DOM references, event listeners, and starts with empty state
+             */
+            initialize() {
+                this.cacheDOMElements();
+                this.setupEventListeners();
+                this.setupWakeLock();
+                this.showWelcomeState();
+            }
+            
+            /**
+             * Cache frequently used DOM elements for better performance
+             */
+            cacheDOMElements() {
+                // Welcome state elements
+                this.elements.welcomeState = document.getElementById('welcomeState');
+                this.elements.workoutInterface = document.getElementById('workoutInterface');
+                this.elements.loadSampleBtn = document.getElementById('loadSampleBtn');
+                this.elements.loadJsonBtn = document.getElementById('loadJsonBtn');
+                
+                // Control buttons
+                this.elements.playBtn = document.getElementById('playBtn');
+                this.elements.pauseBtn = document.getElementById('pauseBtn');
+                this.elements.restartBtn = document.getElementById('restartBtn');
+                this.elements.loadNewSampleBtn = document.getElementById('loadNewSampleBtn');
+                this.elements.loadNewJsonBtn = document.getElementById('loadNewJsonBtn');
+                this.elements.parseJsonBtn = document.getElementById('parseJsonBtn');
+                this.elements.cancelJsonBtn = document.getElementById('cancelJsonBtn');
+                
+                // Display elements
+                this.elements.classTitle = document.getElementById('classTitle');
+                this.elements.totalRemainingTime = document.getElementById('totalRemainingTime');
+                this.elements.intervalTimer = document.getElementById('intervalTimer');
+                this.elements.timerProgressBar = document.getElementById('timerProgressBar');
+                this.elements.currentIntervalType = document.getElementById('currentIntervalType');
+                this.elements.currentIntervalProgress = document.getElementById('currentIntervalProgress');
+                this.elements.currentIntervalConfig = document.getElementById('currentIntervalConfig');
+                this.elements.currentIntervalNotes = document.getElementById('currentIntervalNotes');
+                
+                // Next interval elements
+                this.elements.nextIntervalType = document.getElementById('nextIntervalType');
+                this.elements.nextIntervalConfig = document.getElementById('nextIntervalConfig');
+                this.elements.nextIntervalNotes = document.getElementById('nextIntervalNotes');
+                
+                // User info elements
+                this.elements.userInfo = document.getElementById('userInfo');
+                this.elements.userLocation = document.getElementById('userLocation');
+                this.elements.classDate = document.getElementById('classDate');
+                this.elements.classDuration = document.getElementById('classDuration');
+                
+                // Seek controls
+                this.elements.seekSlider = document.getElementById('seekSlider');
+                this.elements.seekPercentage = document.getElementById('seekPercentage');
+                this.elements.currentTime = document.getElementById('currentTime');
+                this.elements.totalTime = document.getElementById('totalTime');
+                
+                // Interval list
+                this.elements.intervalListContainer = document.getElementById('intervalListContainer');
+                this.elements.intervalListCount = document.getElementById('intervalListCount');
+                
+                // JSON loader
+                this.elements.jsonTextarea = document.getElementById('jsonTextarea');
+                this.elements.jsonInputContainer = document.getElementById('jsonInputContainer');
+                
+                // Modals
+                this.elements.validationModal = document.getElementById('validationModal');
+                this.elements.validationMessage = document.getElementById('validationMessage');
+                this.elements.validationDetails = document.getElementById('validationDetails');
+                this.elements.validationOkBtn = document.getElementById('validationOkBtn');
+                
+                this.elements.successModal = document.getElementById('successModal');
+                this.elements.successMessage = document.getElementById('successMessage');
+                this.elements.successOkBtn = document.getElementById('successOkBtn');
+                
+                this.elements.confirmationModal = document.getElementById('confirmationModal');
+                this.elements.confirmationTitle = document.getElementById('confirmationTitle');
+                this.elements.confirmationMessage = document.getElementById('confirmationMessage');
+                this.elements.confirmationCancelBtn = document.getElementById('confirmationCancelBtn');
+                this.elements.confirmationConfirmBtn = document.getElementById('confirmationConfirmBtn');
+                
+                this.elements.loadingModal = document.getElementById('loadingModal');
+                
+                // Status indicator
+                this.elements.statusIndicator = document.getElementById('statusIndicator');
+                this.elements.classStatus = document.getElementById('classStatus');
+                
+                // Interval transition effect
+                this.elements.intervalTransition = document.getElementById('intervalTransition');
+                
+                // Wake lock banner
+                this.elements.wakeLockBanner = document.getElementById('wakeLockBanner');
+            }
+            
+            /**
+             * Set up event listeners for all interactive elements
+             */
+            setupEventListeners() {
+                // Welcome state buttons
+                this.elements.loadSampleBtn.addEventListener('click', () => this.loadSampleWorkout());
+                this.elements.loadJsonBtn.addEventListener('click', () => this.showJsonInput());
+                
+                // Control buttons
+                this.elements.playBtn.addEventListener('click', () => this.togglePlayPause());
+                this.elements.pauseBtn.addEventListener('click', () => this.pause());
+                this.elements.restartBtn.addEventListener('click', () => this.confirmRestart());
+                this.elements.loadNewSampleBtn.addEventListener('click', () => this.confirmLoadSample());
+                this.elements.loadNewJsonBtn.addEventListener('click', () => this.showJsonInput());
+                this.elements.parseJsonBtn.addEventListener('click', () => this.parseAndLoadJson());
+                this.elements.cancelJsonBtn.addEventListener('click', () => this.hideJsonInput());
+                
+                // Seek slider
+                this.elements.seekSlider.addEventListener('input', (e) => this.handleSeek(e.target.value));
+                
+                // Modal buttons
+                this.elements.validationOkBtn.addEventListener('click', () => this.hideModal('validationModal'));
+                this.elements.successOkBtn.addEventListener('click', () => this.hideModal('successModal'));
+                this.elements.confirmationCancelBtn.addEventListener('click', () => this.cancelConfirmation());
+                this.elements.confirmationConfirmBtn.addEventListener('click', () => this.confirmAction());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+                
+                // Handle visibility change (for wake lock)
+                document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+                
+                // Handle page unload
+                window.addEventListener('beforeunload', () => this.cleanup());
+            }
+            
+            // =============================================
+            // UI STATE MANAGEMENT
+            // =============================================
+            
+            /**
+             * Show welcome state (initial empty state)
+             */
+            showWelcomeState() {
+                this.elements.welcomeState.classList.remove('hidden');
+                this.elements.workoutInterface.classList.add('hidden');
+            }
+            
+            /**
+             * Show workout interface (after loading workout)
+             */
+            showWorkoutInterface() {
+                this.elements.welcomeState.classList.add('hidden');
+                this.elements.workoutInterface.classList.remove('hidden');
+            }
+            
+            /**
+             * Show JSON input area
+             */
+            showJsonInput() {
+                this.elements.jsonInputContainer.style.display = 'block';
+                this.elements.jsonTextarea.focus();
+            }
+            
+            /**
+             * Hide JSON input area
+             */
+            hideJsonInput() {
+                this.elements.jsonInputContainer.style.display = 'none';
+                this.elements.jsonTextarea.value = '';
+            }
+            
+            // =============================================
+            // SAMPLE WORKOUT DATA - FIXED
+            // =============================================
+            
+            /**
+             * Get sample workout data with properly parsed durations
+             * @returns {Object} Sample workout data
+             */
+            getSampleWorkout() {
+                return {
+                    "classPurpose": "Endurance treadmill run for knee strength",
+                    "userAge": 36,
+                    "userlocation": "Carrollton, TX",
+                    "userWeight": "73 kg",
+                    "userHeight": "5 ft 10 in",
+                    "classDate": "2024-07-16",
+                    "classDuration": "45 min",
+                    "intervalConfigList": [
+                        {
+                            "intervalType": "Treadmill Warm-up",
+                            "treadmillConfig": {
+                                "incline": "1% | 2% for advanced",
+                                "speed": "3.5 mph | hard: 4.0 mph | careful: 4.5 mph",
+                                "duration": "5 min"
+                            }
+                        },
+                        {
+                            "intervalType": "Endurance Run",
+                            "treadmillConfig": {
+                                "incline": "1% | progressive: 2%",
+                                "speed": "5.5 mph | challenge: 6.0 mph",
+                                "duration": "25 min"
+                            }
+                        },
+                        {
+                            "intervalType": "Treadmill Cool-down",
+                            "treadmillConfig": {
+                                "incline": "0% | gradual: 1% to 0%",
+                                "speed": "2.5 mph | slow: 2.0 mph",
+                                "duration": "3 min"
+                            }
+                        },
+                        {
+                            "intervalType": "Water / no-exercise break",
+                            "duration": "60 sec"
+                        },
+                        {
+                            "intervalType": "Left Lateral Shuffle on Treadmill",
+                            "treadmillConfig": {
+                                "incline": "0% | slight: 1%",
+                                "speed": "3.0 mph | controlled: 2.5 mph",
+                                "duration": "3 min",
+                                "notes": "keep your butt parallel to the floor"
+                            }
+                        },
+                        {
+                            "intervalType": "Right Lateral Shuffle on Treadmill",
+                            "treadmillConfig": {
+                                "incline": "0% | slight: 1%",
+                                "speed": "3.0 mph | controlled: 2.5 mph",
+                                "duration": "3 min",
+                                "notes": "keep your butt parallel to the floor"
+                            }
+                        },
+                        {
+                            "intervalType": "Water / no-exercise break",
+                            "duration": "2 min",
+                            "notes": "switch to floor exercises next"
+                        },
+                        {
+                            "intervalType": "Chest press with dumbbells",
+                            "floorExerciseConfig": {
+                                "weight": "15 lbs | light: 10 lbs | heavy: 20 lbs",
+                                "reps": "8 to 15",
+                                "duration": "3 min",
+                                "notes": "if completed early, stretch chest / jumping jacks"
+                            }
+                        }
+                    ]
+                };
+            }
+            
+            /**
+             * Load sample workout with confirmation if workout is in progress
+             */
+            async loadSampleWorkout() {
+                if (this.state.isWorkoutLoaded && (this.state.isPlaying || this.state.totalElapsedTime > 0)) {
+                    const confirmed = await this.showConfirmation(
+                        "Load Sample Workout",
+                        "This will reset your current workout progress. Are you sure you want to continue?"
+                    );
+                    if (!confirmed) return;
+                }
+                
+                this.showLoadingModal();
+                // Simulate loading delay for better UX
+                setTimeout(() => {
+                    const sampleData = this.getSampleWorkout();
+                    this.processAndLoadWorkoutData(sampleData);
+                    this.hideLoadingModal();
+                    this.hideJsonInput();
+                }, 500);
+            }
+            
+            /**
+             * Confirm loading sample workout
+             */
+            async confirmLoadSample() {
+                if (this.state.isPlaying || this.state.totalElapsedTime > 0) {
+                    const confirmed = await this.showConfirmation(
+                        "Load Sample Workout",
+                        "This will reset your current workout progress. Are you sure you want to continue?"
+                    );
+                    if (!confirmed) return;
+                }
+                this.loadSampleWorkout();
+            }
+            
+            // =============================================
+            // WORKOUT DATA MANAGEMENT - FIXED
+            // =============================================
+            
+            /**
+             * Process workout data to parse durations and validate
+             * @param {Object} workoutData - Workout data to process
+             * @returns {Object} Processed workout data
+             */
+            processWorkoutData(workoutData) {
+                if (!workoutData) return null;
+                
+                // Parse class duration
+                const totalClassDuration = this.parseDuration(workoutData.classDuration);
+                workoutData._totalClassDuration = totalClassDuration;
+                
+                let totalIntervalDuration = 0;
+                
+                // Parse each interval duration
+                workoutData.intervalConfigList.forEach((interval, index) => {
+                    let intervalDuration = 0;
+                    
+                    if (interval.treadmillConfig && interval.treadmillConfig.duration) {
+                        intervalDuration = this.parseDuration(interval.treadmillConfig.duration);
+                    } else if (interval.duration) {
+                        intervalDuration = this.parseDuration(interval.duration);
+                    } else if (interval.floorExerciseConfig && interval.floorExerciseConfig.duration) {
+                        intervalDuration = this.parseDuration(interval.floorExerciseConfig.duration);
+                    }
+                    
+                    if (intervalDuration === 0) {
+                        console.warn(`Interval ${index + 1} has no valid duration specified`);
+                    }
+                    
+                    interval._parsedDuration = intervalDuration;
+                    totalIntervalDuration += intervalDuration;
+                    
+                    // Also store formatted duration for display
+                    interval._displayDuration = this.formatTime(intervalDuration);
+                });
+                
+                workoutData._totalIntervalDuration = totalIntervalDuration;
+                
+                // Validate total duration match
+                const durationDiff = Math.abs(totalClassDuration - totalIntervalDuration);
+                if (durationDiff > 1) { // Allow 1 second difference for rounding
+                    this.showValidationError(
+                        `Total duration mismatch`,
+                        `Class duration: ${this.formatTime(totalClassDuration)}\n` +
+                        `Sum of intervals: ${this.formatTime(totalIntervalDuration)}\n` +
+                        `Difference: ${this.formatTime(durationDiff)}`
+                    );
+                    return null;
+                }
+                
+                return workoutData;
+            }
+            
+            /**
+             * Process and load workout data
+             * @param {Object} workoutData - Workout data to process and load
+             */
+            processAndLoadWorkoutData(workoutData) {
+                const processedData = this.processWorkoutData(workoutData);
+                if (!processedData) return;
+                
+                this.loadWorkoutData(processedData);
+            }
+            
+            /**
+             * Parse and validate workout JSON data
+             * @param {string} jsonString - JSON string to parse
+             * @returns {Object} Parsed and validated workout data
+             */
+            parseWorkoutJson(jsonString) {
+                try {
+                    const data = JSON.parse(jsonString);
+                    return this.processWorkoutData(data);
+                    
+                } catch (error) {
+                    this.showValidationError("JSON Parsing Error", error.message);
+                    return null;
+                }
+            }
+            
+            /**
+             * Parse and load JSON from textarea
+             */
+            async parseAndLoadJson() {
+                const jsonString = this.elements.jsonTextarea.value.trim();
+                
+                if (!jsonString) {
+                    this.showValidationError("Input Error", "Please paste a JSON workout plan");
+                    return;
+                }
+                
+                if (this.state.isWorkoutLoaded && (this.state.isPlaying || this.state.totalElapsedTime > 0)) {
+                    const confirmed = await this.showConfirmation(
+                        "Load New Workout",
+                        "This will reset your current workout progress. Are you sure you want to continue?"
+                    );
+                    if (!confirmed) return;
+                }
+                
+                this.showLoadingModal();
+                
+                // Simulate processing delay
+                setTimeout(() => {
+                    const parsedData = this.parseWorkoutJson(jsonString);
+                    if (parsedData) {
+                        this.loadWorkoutData(parsedData);
+                        this.hideJsonInput();
+                    }
+                    this.hideLoadingModal();
+                }, 500);
+            }
+            
+            /**
+             * Load and validate workout data
+             * @param {Object} workoutData - Parsed workout data
+             */
+            loadWorkoutData(workoutData) {
+                if (!workoutData) return;
+                
+                // Store workout data
+                this.state.workoutData = workoutData;
+                this.state.isWorkoutLoaded = true;
+                
+                // Reset app state
+                this.resetAppState();
+                
+                // Show workout interface
+                this.showWorkoutInterface();
+                
+                // Update UI with workout data
+                this.updateWorkoutDisplay();
+                
+                // Update current interval and timer display
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                
+                // Render interval list WITH PROPER DURATIONS
+                this.renderIntervalList();
+                
+                // Update total time display
+                this.updateTotalTimeDisplay();
+                
+                // Show success message
+                this.showSuccessModal("Workout plan loaded successfully!");
+            }
+            
+            // =============================================
+            // TIME AND DURATION PARSING
+            // =============================================
+            
+            /**
+             * Parse duration string to seconds
+             * Supports formats: "45 min", "90 sec", "2 min", "1:30", "1h 30m"
+             * @param {string} durationStr - Duration string to parse
+             * @returns {number} Duration in seconds
+             */
+            parseDuration(durationStr) {
+                if (!durationStr) return 0;
+                
+                const str = durationStr.toLowerCase().trim();
+                let totalSeconds = 0;
+                
+                // Try different patterns
+                const patterns = [
+                    // Pattern 1: "45 min" or "90 sec"
+                    { regex: /(\d+(?:\.\d+)?)\s*(min|minute|m|sec|second|s)/, 
+                      handler: (match) => {
+                          const value = parseFloat(match[1]);
+                          const unit = match[2];
+                          return unit.startsWith('min') ? value * 60 : value;
+                      }
+                    },
+                    
+                    // Pattern 2: "hh:mm:ss" or "mm:ss"
+                    { regex: /(\d+):(\d+):(\d+)/,
+                      handler: (match) => {
+                          const hours = parseInt(match[1]);
+                          const minutes = parseInt(match[2]);
+                          const seconds = parseInt(match[3]);
+                          return hours * 3600 + minutes * 60 + seconds;
+                      }
+                    },
+                    
+                    // Pattern 3: "mm:ss"
+                    { regex: /(\d+):(\d+)/,
+                      handler: (match) => {
+                          const minutes = parseInt(match[1]);
+                          const seconds = parseInt(match[2]);
+                          return minutes * 60 + seconds;
+                      }
+                    },
+                    
+                    // Pattern 4: Just a number (assume minutes)
+                    { regex: /^(\d+(?:\.\d+)?)$/,
+                      handler: (match) => parseFloat(match[1]) * 60
+                    }
+                ];
+                
+                // Try each pattern
+                for (const pattern of patterns) {
+                    const match = str.match(pattern.regex);
+                    if (match) {
+                        totalSeconds = pattern.handler(match);
+                        break;
+                    }
+                }
+                
+                return Math.round(totalSeconds);
+            }
+            
+            /**
+             * Format seconds to time string
+             * @param {number} seconds - Time in seconds
+             * @param {boolean} showHours - Whether to show hours
+             * @returns {string} Formatted time string
+             */
+            formatTime(seconds, showHours = false) {
+                const hrs = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+                
+                if (showHours || hrs > 0) {
+                    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            
+            // =============================================
+            // CONFIGURATION PARSING
+            // =============================================
+            
+            /**
+             * Parse multi-level configuration strings (speed, incline, weight)
+             * Supports formats: "3.5 mph | hard: 4.0 mph | careful: 4.5 mph"
+             * @param {string} configStr - Configuration string to parse
+             * @returns {Array} Array of configuration levels
+             */
+            parseMultiLevelConfig(configStr) {
+                if (!configStr) return [];
+                
+                const levels = [];
+                const parts = configStr.split('|').map(part => part.trim());
+                
+                parts.forEach(part => {
+                    // Check if it has a label (e.g., "hard: 4.0 mph")
+                    const colonIndex = part.indexOf(':');
+                    if (colonIndex > 0) {
+                        const label = part.substring(0, colonIndex).trim();
+                        const value = part.substring(colonIndex + 1).trim();
+                        levels.push({ label, value });
+                    } else {
+                        // No label, just a value
+                        levels.push({ label: '', value: part });
+                    }
+                });
+                
+                return levels;
+            }
+            
+            /**
+             * Create HTML for multi-level configuration display
+             * @param {Array} levels - Array of configuration levels
+             * @returns {string} HTML string
+             */
+            createMultiLevelHTML(levels) {
+                if (!levels || levels.length === 0) return '<div class="config-value">N/A</div>';
+                
+                let html = '';
+                
+                levels.forEach((level, index) => {
+                    if (index === 0) {
+                        // First level is the main/default value
+                        html += `<div class="config-value">${level.value}</div>`;
+                    } else {
+                        // Additional levels as options
+                        html += `
+                            <div class="config-level">
+                                <div class="config-level-title">${level.label || 'Option'}</div>
+                                <div class="config-level-value">${level.value}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                return html;
+            }
+            
+            // =============================================
+            // TIMER CONTROL METHODS - FIXED WITH AUTO-CONTINUE
+            // =============================================
+            
+            /**
+             * Toggle between play and pause states
+             */
+            togglePlayPause() {
+                if (this.state.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+            
+            /**
+             * Start the workout timer
+             */
+            play() {
+                if (this.state.isPlaying || !this.state.isWorkoutLoaded) return;
+                
+                this.state.isPlaying = true;
+                this.state.autoContinue = true; // Enable auto-continue
+                this.updateStatus('active');
+                
+                // Start the timer
+                this.state.intervalTimer = setInterval(() => {
+                    this.state.currentTime++;
+                    this.state.totalElapsedTime++;
+                    this.updateTimerDisplay();
+                    
+                    // Check if interval is complete
+                    const currentInterval = this.getCurrentInterval();
+                    if (currentInterval && this.state.currentTime >= currentInterval._parsedDuration) {
+                        this.nextInterval();
+                    }
+                    
+                }, 1000);
+                
+                // Request wake lock
+                this.requestWakeLock();
+            }
+            
+            /**
+             * Pause the workout timer
+             */
+            pause() {
+                if (!this.state.isPlaying) return;
+                
+                this.state.isPlaying = false;
+                this.state.autoContinue = false; // Disable auto-continue when user manually pauses
+                this.updateStatus('paused');
+                
+                // Clear the timer
+                if (this.state.intervalTimer) {
+                    clearInterval(this.state.intervalTimer);
+                    this.state.intervalTimer = null;
+                }
+                
+                // Release wake lock
+                this.releaseWakeLock();
+            }
+            
+            /**
+             * Confirm restart action
+             */
+            async confirmRestart() {
+                if (this.state.isPlaying || this.state.totalElapsedTime > 0) {
+                    const confirmed = await this.showConfirmation(
+                        "Restart Workout",
+                        "Are you sure you want to restart the workout? This will reset all progress."
+                    );
+                    if (!confirmed) return;
+                }
+                this.restart();
+            }
+            
+            /**
+             * Restart the workout from beginning
+             */
+            restart() {
+                this.pause();
+                this.state.currentIntervalIndex = 0;
+                this.state.currentTime = 0;
+                this.state.totalElapsedTime = 0;
+                this.state.autoContinue = false;
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                this.updateIntervalList();
+                this.updateStatus('stopped');
+            }
+            
+            /**
+             * Move to the next interval - WITH AUTO-CONTINUE
+             */
+            nextInterval() {
+                const intervals = this.state.workoutData?.intervalConfigList;
+                if (!intervals) return;
+                
+                // Show transition effect
+                this.showIntervalTransition();
+                
+                // Move to next interval
+                this.state.currentIntervalIndex++;
+                this.state.currentTime = 0;
+                
+                // If we've completed all intervals, stop
+                if (this.state.currentIntervalIndex >= intervals.length) {
+                    this.pause();
+                    this.updateStatus('completed');
+                    this.showSuccessModal("Workout completed! Great job!");
+                    return;
+                }
+                
+                // Update displays
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                this.updateIntervalList();
+                
+                // Play transition sound
+                this.playTransitionSound();
+                
+                // AUTO-CONTINUE: If we were playing before, continue playing
+                if (this.state.autoContinue && !this.state.isPlaying) {
+                    // Small delay to allow transition effect to show
+                    setTimeout(() => {
+                        this.play();
+                    }, 100);
+                }
+            }
+            
+            // =============================================
+            // HANDLE INTERVAL SWITCHING - FIXED
+            // =============================================
+            
+            /**
+             * Handle seek slider input - ALWAYS AUTO-CONTINUE
+             */
+            handleSeek(percentage) {
+                if (!this.state.isWorkoutLoaded) return;
+                
+                // Remember if we were playing
+                const wasPlaying = this.state.isPlaying;
+                
+                // Temporarily pause while seeking
+                if (this.state.isPlaying) {
+                    this.state.isPlaying = false;
+                    if (this.state.intervalTimer) {
+                        clearInterval(this.state.intervalTimer);
+                        this.state.intervalTimer = null;
+                    }
+                    this.updateStatus('paused');
+                }
+                
+                const totalDuration = this.state.workoutData?._totalClassDuration || 0;
+                const targetTime = Math.round((percentage / 100) * totalDuration);
+                
+                // Find which interval this time corresponds to
+                let accumulatedTime = 0;
+                let intervalIndex = 0;
+                let intervalTime = 0;
+                
+                const intervals = this.state.workoutData?.intervalConfigList;
+                if (!intervals) return;
+                
+                for (let i = 0; i < intervals.length; i++) {
+                    const intervalDuration = intervals[i]._parsedDuration || 0;
+                    
+                    if (targetTime <= accumulatedTime + intervalDuration) {
+                        intervalIndex = i;
+                        intervalTime = targetTime - accumulatedTime;
+                        break;
+                    }
+                    
+                    accumulatedTime += intervalDuration;
+                }
+                
+                // Update state
+                this.state.currentIntervalIndex = intervalIndex;
+                this.state.currentTime = intervalTime;
+                this.state.totalElapsedTime = targetTime;
+                
+                // Update displays
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                this.updateIntervalList();
+                
+                // Update percentage display
+                this.elements.seekPercentage.textContent = `${percentage}%`;
+                
+                // ALWAYS AUTO-CONTINUE if it was playing before
+                if (wasPlaying) {
+                    // Small delay for smooth transition
+                    setTimeout(() => {
+                        this.play();
+                    }, 100);
+                }
+            }
+            
+            /**
+             * Jump to specific interval - ALWAYS AUTO-CONTINUE
+             */
+            async jumpToInterval(index) {
+                if (index < 0 || index >= (this.state.workoutData?.intervalConfigList.length || 0)) return;
+                
+                // Remember if we were playing
+                const wasPlaying = this.state.isPlaying;
+                
+                // Temporarily pause while switching
+                if (this.state.isPlaying) {
+                    this.state.isPlaying = false;
+                    if (this.state.intervalTimer) {
+                        clearInterval(this.state.intervalTimer);
+                        this.state.intervalTimer = null;
+                    }
+                    this.updateStatus('paused');
+                }
+                
+                // Calculate total elapsed time up to this interval
+                let elapsedTime = 0;
+                for (let i = 0; i < index; i++) {
+                    elapsedTime += this.state.workoutData.intervalConfigList[i]._parsedDuration || 0;
+                }
+                
+                // Update state
+                this.state.currentIntervalIndex = index;
+                this.state.currentTime = 0;
+                this.state.totalElapsedTime = elapsedTime;
+                
+                // Update displays
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                this.updateIntervalList();
+                this.updateStatus('stopped');
+                
+                // ALWAYS AUTO-CONTINUE if it was playing before
+                if (wasPlaying) {
+                    // Small delay for smooth transition
+                    setTimeout(() => {
+                        this.play();
+                    }, 100);
+                }
+            }
+            
+            // =============================================
+            // UI UPDATE METHODS
+            // =============================================
+            
+            /**
+             * Update all UI elements based on current state
+             */
+            render() {
+                this.updateCurrentIntervalDisplay();
+                this.updateTimerDisplay();
+                this.updateTotalTimeDisplay();
+                this.updateIntervalList();
+                this.updateStatus('stopped');
+            }
+            
+            /**
+             * Update current interval display with multi-level support
+             */
+            updateCurrentIntervalDisplay() {
+                const intervals = this.state.workoutData?.intervalConfigList;
+                if (!intervals || intervals.length === 0) return;
+                
+                const currentInterval = intervals[this.state.currentIntervalIndex];
+                if (!currentInterval) return;
+                
+                // Update interval type
+                this.elements.currentIntervalType.textContent = currentInterval.intervalType;
+                
+                // Update progress indicator
+                this.elements.currentIntervalProgress.textContent = 
+                    `${this.state.currentIntervalIndex + 1} of ${intervals.length}`;
+                
+                // Update configuration display with multi-level support
+                let configHtml = '';
+                
+                if (currentInterval.treadmillConfig) {
+                    // Parse multi-level speed
+                    const speedLevels = this.parseMultiLevelConfig(currentInterval.treadmillConfig.speed);
+                    const inclineLevels = this.parseMultiLevelConfig(currentInterval.treadmillConfig.incline);
+                    
+                    configHtml = `
+                        <div class="config-item">
+                            <div class="config-label">Speed</div>
+                            ${this.createMultiLevelHTML(speedLevels)}
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Incline</div>
+                            ${this.createMultiLevelHTML(inclineLevels)}
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Duration</div>
+                            <div class="config-value">${currentInterval.treadmillConfig.duration || 'N/A'}</div>
+                        </div>
+                    `;
+                    
+                    // Update notes
+                    const notes = currentInterval.treadmillConfig.notes || '';
+                    this.updateNotesDisplay(notes);
+                    
+                } else if (currentInterval.floorExerciseConfig) {
+                    // Parse multi-level weight
+                    const weightLevels = this.parseMultiLevelConfig(currentInterval.floorExerciseConfig.weight);
+                    
+                    configHtml = `
+                        <div class="config-item">
+                            <div class="config-label">Weight</div>
+                            ${this.createMultiLevelHTML(weightLevels)}
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Reps</div>
+                            <div class="config-value">${currentInterval.floorExerciseConfig.reps || 'N/A'}</div>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Duration</div>
+                            <div class="config-value">${currentInterval.floorExerciseConfig.duration || 'N/A'}</div>
+                        </div>
+                    `;
+                    
+                    // Update notes
+                    const notes = currentInterval.floorExerciseConfig.notes || '';
+                    this.updateNotesDisplay(notes);
+                    
+                } else {
+                    // For rest intervals
+                    configHtml = `
+                        <div class="config-item">
+                            <div class="config-label">Type</div>
+                            <div class="config-value">Rest Interval</div>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">Duration</div>
+                            <div class="config-value">${currentInterval.duration || 'N/A'}</div>
+                        </div>
+                    `;
+                    
+                    this.updateNotesDisplay(currentInterval.notes || 'Take a break and hydrate');
+                }
+                
+                this.elements.currentIntervalConfig.innerHTML = configHtml;
+                
+                // Update next interval display
+                const nextInterval = intervals[this.state.currentIntervalIndex + 1];
+                if (nextInterval) {
+                    this.elements.nextIntervalType.textContent = nextInterval.intervalType;
+                    
+                    // Update next interval configuration
+                    this.updateNextIntervalConfig(nextInterval);
+                } else {
+                    this.elements.nextIntervalType.textContent = 'Workout Complete';
+                    this.clearNextIntervalConfig();
+                }
+            }
+            
+            /**
+             * Update the timer display with total countdown
+             */
+            updateTimerDisplay() {
+                const currentInterval = this.getCurrentInterval();
+                if (!currentInterval) return;
+                
+                const intervalDuration = currentInterval._parsedDuration || 0;
+                const timeRemaining = Math.max(0, intervalDuration - this.state.currentTime);
+                
+                // Update interval timer display
+                this.elements.intervalTimer.textContent = this.formatTime(timeRemaining);
+                
+                // Update progress bar
+                const progressPercentage = intervalDuration > 0 ? 
+                    Math.min(100, (this.state.currentTime / intervalDuration) * 100) : 0;
+                this.elements.timerProgressBar.style.width = `${progressPercentage}%`;
+                
+                // Update total remaining time
+                const totalDuration = this.state.workoutData?._totalClassDuration || 0;
+                const totalRemaining = Math.max(0, totalDuration - this.state.totalElapsedTime);
+                this.elements.totalRemainingTime.textContent = this.formatTime(totalRemaining);
+                
+                // Update time displays
+                this.elements.currentTime.textContent = this.formatTime(this.state.totalElapsedTime, true);
+                
+                // Update seek slider
+                const seekPercentage = totalDuration > 0 ? 
+                    Math.min(100, Math.round((this.state.totalElapsedTime / totalDuration) * 100)) : 0;
+                this.elements.seekSlider.value = seekPercentage;
+                this.elements.seekPercentage.textContent = `${seekPercentage}%`;
+            }
+            
+            /**
+             * Update total time display
+             */
+            updateTotalTimeDisplay() {
+                if (!this.state.workoutData) return;
+                
+                const totalDuration = this.state.workoutData._totalClassDuration || 0;
+                this.elements.totalTime.textContent = this.formatTime(totalDuration, true);
+                
+                // Update class duration display
+                this.elements.classDuration.textContent = this.state.workoutData.classDuration || 'N/A';
+            }
+            
+            /**
+             * Update notes display
+             * @param {string} notes - Notes to display
+             */
+            updateNotesDisplay(notes) {
+                const notesElement = this.elements.currentIntervalNotes.querySelector('.notes-content');
+                if (notesElement) {
+                    notesElement.textContent = notes || 'No notes for this interval';
+                }
+            }
+            
+            /**
+             * Update next interval configuration display with multi-level support
+             * @param {Object} nextInterval - Next interval data
+             */
+            updateNextIntervalConfig(nextInterval) {
+                let configHtml = '';
+                
+                if (nextInterval.treadmillConfig) {
+                    const speedLevels = this.parseMultiLevelConfig(nextInterval.treadmillConfig.speed);
+                    const inclineLevels = this.parseMultiLevelConfig(nextInterval.treadmillConfig.incline);
+                    
+                    configHtml = `
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <div class="config-label">Speed</div>
+                                ${this.createMultiLevelHTML(speedLevels)}
+                            </div>
+                            <div class="config-item">
+                                <div class="config-label">Duration</div>
+                                <div class="config-value">${nextInterval.treadmillConfig.duration || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Update next interval notes
+                    const notes = nextInterval.treadmillConfig.notes || '';
+                    this.updateNextIntervalNotes(notes);
+                    
+                } else if (nextInterval.floorExerciseConfig) {
+                    const weightLevels = this.parseMultiLevelConfig(nextInterval.floorExerciseConfig.weight);
+                    
+                    configHtml = `
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <div class="config-label">Weight</div>
+                                ${this.createMultiLevelHTML(weightLevels)}
+                            </div>
+                            <div class="config-item">
+                                <div class="config-label">Duration</div>
+                                <div class="config-value">${nextInterval.floorExerciseConfig.duration || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const notes = nextInterval.floorExerciseConfig.notes || '';
+                    this.updateNextIntervalNotes(notes);
+                    
+                } else {
+                    configHtml = `
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <div class="config-label">Type</div>
+                                <div class="config-value">Rest Interval</div>
+                            </div>
+                            <div class="config-item">
+                                <div class="config-label">Duration</div>
+                                <div class="config-value">${nextInterval.duration || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    this.updateNextIntervalNotes(nextInterval.notes || 'Rest and hydrate');
+                }
+                
+                this.elements.nextIntervalConfig.innerHTML = configHtml;
+            }
+            
+            /**
+             * Clear next interval configuration
+             */
+            clearNextIntervalConfig() {
+                this.elements.nextIntervalConfig.innerHTML = '';
+                const notesElement = this.elements.nextIntervalNotes.querySelector('.notes-content');
+                if (notesElement) {
+                    notesElement.textContent = 'Workout complete! Great job!';
+                }
+            }
+            
+            /**
+             * Update next interval notes
+             * @param {string} notes - Notes for next interval
+             */
+            updateNextIntervalNotes(notes) {
+                const notesElement = this.elements.nextIntervalNotes.querySelector('.notes-content');
+                if (notesElement) {
+                    notesElement.textContent = notes || 'Prepare for next interval';
+                }
+            }
+            
+            /**
+             * Update workout header information
+             */
+            updateWorkoutDisplay() {
+                const data = this.state.workoutData;
+                if (!data) return;
+                
+                // Update class title
+                this.elements.classTitle.textContent = data.classPurpose;
+                
+                // Update user info
+                this.elements.userInfo.textContent = 
+                    `${data.userAge} years, ${data.userWeight}, ${data.userHeight}`;
+                
+                // Update other info
+                this.elements.userLocation.textContent = data.userlocation;
+                this.elements.classDate.textContent = new Date(data.classDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                this.elements.classDuration.textContent = data.classDuration;
+            }
+            
+            /**
+             * Render the interval list WITH PROPER DURATIONS
+             */
+            renderIntervalList() {
+                const intervals = this.state.workoutData?.intervalConfigList;
+                if (!intervals) return;
+                
+                let html = '';
+                
+                intervals.forEach((interval, index) => {
+                    // Use the pre-parsed duration that should now be available
+                    const duration = interval._parsedDuration || 0;
+                    const displayDuration = interval._displayDuration || this.formatTime(duration);
+                    
+                    const isActive = index === this.state.currentIntervalIndex;
+                    const isPast = index < this.state.currentIntervalIndex;
+                    
+                    let configInfo = '';
+                    if (interval.treadmillConfig) {
+                        // Get first speed level for display
+                        const speedLevels = this.parseMultiLevelConfig(interval.treadmillConfig.speed);
+                        configInfo = speedLevels.length > 0 ? speedLevels[0].value : 'N/A';
+                    } else if (interval.floorExerciseConfig) {
+                        // Get first weight level for display
+                        const weightLevels = this.parseMultiLevelConfig(interval.floorExerciseConfig.weight);
+                        configInfo = weightLevels.length > 0 ? weightLevels[0].value : 'N/A';
+                    } else {
+                        configInfo = 'Rest';
+                    }
+                    
+                    html += `
+                        <div class="interval-item ${isActive ? 'active' : ''} ${isPast ? 'past' : ''}" 
+                             data-index="${index}">
+                            <div class="interval-item-header">
+                                <div class="interval-item-type">${interval.intervalType}</div>
+                                <div class="interval-item-duration">${displayDuration}</div>
+                            </div>
+                            <div class="text-muted">${configInfo}</div>
+                        </div>
+                    `;
+                });
+                
+                this.elements.intervalListContainer.innerHTML = html;
+                this.elements.intervalListCount.textContent = `${intervals.length} intervals`;
+                
+                // Add click event to interval items - REMOVED CONFIRMATION
+                this.elements.intervalListContainer.querySelectorAll('.interval-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        // Directly jump to interval without confirmation
+                        this.jumpToInterval(index);
+                    });
+                });
+            }
+            
+            /**
+             * Update interval list highlights
+             */
+            updateIntervalList() {
+                const items = this.elements.intervalListContainer.querySelectorAll('.interval-item');
+                
+                items.forEach((item, index) => {
+                    item.classList.remove('active', 'past');
+                    
+                    if (index === this.state.currentIntervalIndex) {
+                        item.classList.add('active');
+                        // Scroll into view if not visible
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else if (index < this.state.currentIntervalIndex) {
+                        item.classList.add('past');
+                    }
+                });
+            }
+            
+            /**
+             * Update status indicator
+             * @param {string} status - Status: 'active', 'paused', 'stopped', 'completed'
+             */
+            updateStatus(status) {
+                const statusIndicator = this.elements.statusIndicator;
+                const statusText = this.elements.classStatus;
+                
+                statusIndicator.className = 'status-indicator';
+                
+                switch(status) {
+                    case 'active':
+                        statusIndicator.classList.add('status-active');
+                        statusText.textContent = 'Workout in Progress';
+                        break;
+                    case 'paused':
+                        statusIndicator.classList.add('status-paused');
+                        statusText.textContent = 'Workout Paused';
+                        break;
+                    case 'completed':
+                        statusIndicator.classList.add('status-success');
+                        statusText.textContent = 'Workout Completed';
+                        break;
+                    default:
+                        statusIndicator.classList.add('status-stopped');
+                        statusText.textContent = 'Ready to Start';
+                }
+            }
+            
+            // =============================================
+            // HELPER METHODS
+            // =============================================
+            
+            /**
+             * Get current interval data
+             * @returns {Object} Current interval data
+             */
+            getCurrentInterval() {
+                return this.state.workoutData?.intervalConfigList[this.state.currentIntervalIndex];
+            }
+            
+            /**
+             * Reset app state
+             */
+            resetAppState() {
+                this.pause();
+                this.state.currentIntervalIndex = 0;
+                this.state.currentTime = 0;
+                this.state.totalElapsedTime = 0;
+                this.state.autoContinue = false;
+            }
+            
+            // =============================================
+            // MODAL METHODS
+            // =============================================
+            
+            /**
+             * Show loading modal
+             */
+            showLoadingModal() {
+                this.showModal('loadingModal');
+            }
+            
+            /**
+             * Hide loading modal
+             */
+            hideLoadingModal() {
+                this.hideModal('loadingModal');
+            }
+            
+            /**
+             * Show confirmation modal
+             * @param {string} title - Confirmation title
+             * @param {string} message - Confirmation message
+             * @returns {Promise} Resolves to true if confirmed, false if cancelled
+             */
+            showConfirmation(title, message) {
+                return new Promise((resolve) => {
+                    this.elements.confirmationTitle.textContent = title;
+                    this.elements.confirmationMessage.textContent = message;
+                    this.confirmationCallback = resolve;
+                    this.showModal('confirmationModal');
+                });
+            }
+            
+            /**
+             * Confirm action in confirmation modal
+             */
+            confirmAction() {
+                if (this.confirmationCallback) {
+                    this.confirmationCallback(true);
+                    this.confirmationCallback = null;
+                }
+                this.hideModal('confirmationModal');
+            }
+            
+            /**
+             * Cancel action in confirmation modal
+             */
+            cancelConfirmation() {
+                if (this.confirmationCallback) {
+                    this.confirmationCallback(false);
+                    this.confirmationCallback = null;
+                }
+                this.hideModal('confirmationModal');
+            }
+            
+            /**
+             * Show validation error modal
+             * @param {string} title - Error title
+             * @param {string} details - Error details
+             */
+            showValidationError(title, details) {
+                this.elements.validationMessage.textContent = title;
+                this.elements.validationDetails.textContent = details;
+                this.showModal('validationModal');
+            }
+            
+            /**
+             * Show success modal
+             * @param {string} message - Success message
+             */
+            showSuccessModal(message) {
+                this.elements.successMessage.textContent = message;
+                this.showModal('successModal');
+            }
+            
+            /**
+             * Show modal
+             * @param {string} modalId - Modal element ID
+             */
+            showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('active');
+                }
+            }
+            
+            /**
+             * Hide modal
+             * @param {string} modalId - Modal element ID
+             */
+            hideModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('active');
+                }
+            }
+            
+            // =============================================
+            // INTERVAL TRANSITION EFFECTS
+            // =============================================
+            
+            /**
+             * Show interval transition animation
+             */
+            showIntervalTransition() {
+                const transitionElement = this.elements.intervalTransition;
+                transitionElement.classList.add('active');
+                
+                // Remove the class after animation completes
+                setTimeout(() => {
+                    transitionElement.classList.remove('active');
+                }, 2000);
+            }
+            
+            /**
+             * Play transition sound
+             */
+            playTransitionSound() {
+                // Create audio context if not already created
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // Create a simple beep sound
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.5);
+            }
+            
+            // =============================================
+            // WAKE LOCK MANAGEMENT
+            // =============================================
+            
+            /**
+             * Setup wake lock functionality
+             */
+            async setupWakeLock() {
+                // Check if wake lock is supported
+                if ('wakeLock' in navigator) {
+                    try {
+                        // Request wake lock when workout starts
+                    } catch (err) {
+                        console.warn('Wake Lock API error:', err);
+                    }
+                } else {
+                    console.log('Wake Lock API not supported');
+                    // Show message to user
+                    this.elements.wakeLockBanner.style.display = 'none';
+                }
+            }
+            
+            /**
+             * Request wake lock to prevent screen sleep
+             */
+            async requestWakeLock() {
+                if ('wakeLock' in navigator) {
+                    try {
+                        this.state.wakeLock = await navigator.wakeLock.request('screen');
+                        this.elements.wakeLockBanner.style.display = 'flex';
+                        
+                        // Handle wake lock release
+                        this.state.wakeLock.addEventListener('release', () => {
+                            console.log('Wake Lock was released');
+                            this.elements.wakeLockBanner.style.display = 'none';
+                        });
+                        
+                    } catch (err) {
+                        console.warn('Failed to acquire wake lock:', err);
+                        this.elements.wakeLockBanner.style.display = 'none';
+                    }
+                }
+            }
+            
+            /**
+             * Release wake lock
+             */
+            async releaseWakeLock() {
+                if (this.state.wakeLock) {
+                    try {
+                        await this.state.wakeLock.release();
+                        this.state.wakeLock = null;
+                        this.elements.wakeLockBanner.style.display = 'none';
+                    } catch (err) {
+                        console.warn('Failed to release wake lock:', err);
+                    }
+                }
+            }
+            
+            /**
+             * Handle visibility change (reacquire wake lock if needed)
+             */
+            async handleVisibilityChange() {
+                if (this.state.isPlaying && this.state.wakeLock !== null && document.visibilityState === 'visible') {
+                    await this.requestWakeLock();
+                }
+            }
+            
+            // =============================================
+            // KEYBOARD SHORTCUTS
+            // =============================================
+            
+            /**
+             * Handle keyboard shortcuts
+             * @param {KeyboardEvent} e - Keyboard event
+             */
+            handleKeyboardShortcuts(e) {
+                // Prevent default for space bar to avoid page scrolling
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    this.togglePlayPause();
+                }
+                
+                // N for next interval
+                if (e.code === 'KeyN' && e.ctrlKey) {
+                    e.preventDefault();
+                    this.nextInterval();
+                }
+                
+                // R for restart
+                if (e.code === 'KeyR' && e.ctrlKey) {
+                    e.preventDefault();
+                    this.confirmRestart();
+                }
+                
+                // Escape to pause
+                if (e.code === 'Escape') {
+                    this.pause();
+                }
+            }
+            
+            // =============================================
+            // CLEANUP METHODS
+            // =============================================
+            
+            /**
+             * Cleanup resources before page unload
+             */
+            cleanup() {
+                this.pause();
+                this.releaseWakeLock();
+                
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+            }
+        }
+        
+        // =============================================
+        // INITIALIZE APPLICATION
+        // =============================================
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create and initialize the HIIT Program Assistant
+            window.hiitApp = new HIITProgramAssistant();
+            
+            // Add CSS for no-select on buttons for better mobile experience
+            const style = document.createElement('style');
+            style.textContent = `
+                button {
+                    -webkit-tap-highlight-color: transparent;
+                    -webkit-touch-callout: none;
+                    user-select: none;
+                }
+                
+                button:active {
+                    transform: scale(0.98);
+                }
+                
+                @media (hover: none) {
+                    .control-btn:hover {
+                        transform: none;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+        
+        // =============================================
+        // PWA FEATURES
+        // =============================================
+        
+        // Register service worker for PWA capabilities
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+            });
+        }
+        
+        // Prevent context menu on buttons for better mobile experience
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
