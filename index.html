@@ -6,7 +6,11 @@
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>HIIT Program Assistant</title>
+    <title>HIIT Program Assistant + HR Monitoring</title>
+    
+    <!-- Add Chart.js for heart rate chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         /* ====================
            CSS RESET & BASE STYLES
@@ -113,6 +117,46 @@
             border-radius: var(--border-radius-md);
         }
 
+        /* Heart Rate Display in Header */
+        .hr-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: 50px;
+            margin-left: auto;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .hr-icon {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            animation: heartBeat 1s infinite;
+        }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            30% { transform: scale(1); }
+        }
+
+        .hr-value { 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            font-family: 'Courier New', monospace;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .hr-display .bpm-label {
+            font-size: 0.8rem; 
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+
         /* Main Content Grid */
         .main-content {
             display: grid;
@@ -153,6 +197,51 @@
             margin-bottom: var(--spacing-md);
             padding-bottom: var(--spacing-sm);
             border-bottom: 2px solid var(--accent-secondary);
+        }
+
+        /* ====================
+           HEART RATE CHART SECTION
+           ==================== */
+        .hr-chart-container {
+            margin-top: var(--spacing-lg);
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius-sm);
+            padding: 10px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .chart-stats {
+            display: flex;
+            gap: var(--spacing-md);
+            font-size: 0.9rem;
+        }
+
+        .chart-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-stat-value {
+            font-weight: bold;
+            color: var(--accent-primary);
+        }
+
+        .chart-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
 
         /* ====================
@@ -207,7 +296,7 @@
             border: 2px solid var(--accent-primary);
         }
 
-        /* NEW: Multi-level config display */
+        /* Multi-level config display */
         .interval-config {
             background: rgba(255, 255, 255, 0.05);
             padding: var(--spacing-md);
@@ -244,7 +333,7 @@
             margin-bottom: var(--spacing-xs);
         }
 
-        /* NEW: Multi-level style */
+        /* Multi-level style */
         .config-level {
             background: rgba(255, 255, 255, 0.03);
             padding: var(--spacing-sm);
@@ -302,7 +391,7 @@
             transition: width 1s linear;
         }
 
-        /* NEW: Total Duration Timer */
+        /* Total Duration Timer */
         .total-timer-container {
             display: flex;
             flex-direction: column;
@@ -420,6 +509,18 @@
         .control-btn-restart {
             background: linear-gradient(135deg, var(--accent-primary), #ff3838);
             color: white;
+        }
+
+        /* Bluetooth Connect Button */
+        .btn-bluetooth {
+            background: linear-gradient(135deg, #0082fc, #0066cc);
+            color: white;
+            width: 100%;
+            margin-top: var(--spacing-md);
+        }
+
+        .btn-bluetooth.connected {
+            background: linear-gradient(135deg, var(--accent-success), #1abc9c);
         }
 
         /* Seek Slider */
@@ -753,6 +854,12 @@
                 text-align: center;
             }
             
+            .hr-display {
+                margin-left: 0;
+                margin-top: var(--spacing-md);
+                width: 100%;
+            }
+            
             .primary-controls {
                 grid-template-columns: 1fr;
             }
@@ -785,6 +892,14 @@
             
             .modal-buttons {
                 flex-direction: column;
+            }
+            
+            .hr-display {
+                padding: 8px 12px;
+            }
+            
+            .hr-value {
+                font-size: 1.5rem;
             }
         }
 
@@ -872,9 +987,10 @@
         <!-- Welcome State (Initially Visible) -->
         <div class="welcome-state" id="welcomeState">
             <div class="welcome-icon">🏋️‍♂️</div>
-            <h2 class="welcome-title">HIIT Program Assistant</h2>
+            <h2 class="welcome-title">HIIT Program Assistant + HR Monitoring</h2>
             <p class="welcome-description">
                 Load a workout plan to get started. You can load a sample workout or paste your own JSON workout plan.
+                Connect your heart rate monitor for real-time tracking.
             </p>
             <div class="welcome-actions">
                 <button class="control-btn" id="loadSampleBtn" style="background: linear-gradient(135deg, #3498db, #2980b9);">
@@ -898,6 +1014,14 @@
                             <span id="classStatus">Ready to Start</span>
                         </div>
                     </div>
+                    
+                    <!-- Heart Rate Display -->
+                    <div id="hrDisplay" class="hr-display hidden">
+                        <span class="hr-icon">❤️</span>
+                        <span class="hr-value" id="hrValue">--</span>
+                        <span class="bpm-label">BPM</span>
+                    </div>
+                    
                     <div class="total-timer-container">
                         <div class="total-timer-label">Total Remaining</div>
                         <div class="total-timer-display" id="totalRemainingTime">45:00</div>
@@ -925,7 +1049,7 @@
 
             <!-- Main Content -->
             <main class="main-content">
-                <!-- Left Column: Current Interval & Next Interval -->
+                <!-- Left Column: Current Interval & HR Chart -->
                 <div class="left-column">
                     <!-- Current Interval -->
                     <div class="card current-interval">
@@ -961,6 +1085,33 @@
                                 For harder effort: 4.0 mph | For careful effort: 4.5 mph
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Heart Rate Chart -->
+                    <div class="card hr-chart-container mt-lg">
+                        <div class="chart-header">
+                            <h3 class="card-title">Heart Rate Intensity</h3>
+                            <div class="chart-stats">
+                                <div class="chart-stat">
+                                    <div class="chart-stat-value" id="currentHR">--</div>
+                                    <div class="chart-stat-label">Current</div>
+                                </div>
+                                <div class="chart-stat">
+                                    <div class="chart-stat-value" id="avgHR">--</div>
+                                    <div class="chart-stat-label">Average</div>
+                                </div>
+                                <div class="chart-stat">
+                                    <div class="chart-stat-value" id="maxHR">--</div>
+                                    <div class="chart-stat-label">Max</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="hrChart"></canvas>
+                        </div>
+                        <button id="connectHRBtn" class="control-btn btn-bluetooth">
+                            <span class="bluetooth-icon">📱</span> Connect Heart Rate Monitor
+                        </button>
                     </div>
                     
                     <!-- Next Interval -->
@@ -1078,7 +1229,7 @@
             </div>
             <div class="confirmation-options">
                 <button class="modal-btn modal-btn-cancel" id="confirmationCancelBtn">Cancel</button>
-                <button class="modal-btn modal-btn-confirm" id="confirmationConfirmBtn">Confirm</button>
+                                <button class="modal-btn modal-btn-confirm" id="confirmationConfirmBtn">Confirm</button>
             </div>
         </div>
     </div>
@@ -1107,28 +1258,48 @@
         </div>
     </div>
 
+    <!-- Bluetooth Connection Modal -->
+    <div class="modal" id="bluetoothModal">
+        <div class="modal-content">
+            <h2 class="modal-title">🔗 Bluetooth Connection</h2>
+            <div class="modal-message text-center" id="bluetoothMessage">
+                Searching for heart rate monitors...
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" id="bluetoothCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // =============================================
-        // HIIT PROGRAM ASSISTANT - MAIN APPLICATION
+        // HIIT PROGRAM ASSISTANT + HR MONITORING
         // =============================================
 
-        // =============================================
-        // CONSTANTS AND GLOBAL VARIABLES
-        // =============================================
         class HIITProgramAssistant {
             constructor() {
                 // App state
                 this.state = {
                     isPlaying: false,
                     currentIntervalIndex: 0,
-                    currentTime: 0, // in seconds
-                    totalElapsedTime: 0, // in seconds
+                    currentTime: 0,
+                    totalElapsedTime: 0,
                     intervalTimer: null,
                     wakeLock: null,
                     workoutData: null,
                     isWorkoutLoaded: false,
-                    autoContinue: true, // Track if we should auto-continue
-                    wasPlayingBeforeAction: false // NEW: Track if workout was playing before an action
+                    autoContinue: true,
+                    wasPlayingBeforeAction: false,
+                    
+                    // Heart Rate Monitoring State
+                    hrConnected: false,
+                    hrDevice: null,
+                    hrCharacteristic: null,
+                    hrHistory: [],
+                    hrTimestamps: [],
+                    hrChart: null,
+                    hrUpdateInterval: null,
+                    maxDataPoints: 50 // Keep last 50 data points
                 };
                 
                 // DOM Elements
@@ -1148,10 +1319,6 @@
             // INITIALIZATION METHODS
             // =============================================
             
-            /**
-             * Main initialization method
-             * Sets up DOM references, event listeners, and starts with empty state
-             */
             initialize() {
                 this.cacheDOMElements();
                 this.setupEventListeners();
@@ -1159,9 +1326,6 @@
                 this.showWelcomeState();
             }
             
-            /**
-             * Cache frequently used DOM elements for better performance
-             */
             cacheDOMElements() {
                 // Welcome state elements
                 this.elements.welcomeState = document.getElementById('welcomeState');
@@ -1177,6 +1341,14 @@
                 this.elements.loadNewJsonBtn = document.getElementById('loadNewJsonBtn');
                 this.elements.parseJsonBtn = document.getElementById('parseJsonBtn');
                 this.elements.cancelJsonBtn = document.getElementById('cancelJsonBtn');
+                
+                // Heart Rate elements
+                this.elements.hrDisplay = document.getElementById('hrDisplay');
+                this.elements.hrValue = document.getElementById('hrValue');
+                this.elements.connectHRBtn = document.getElementById('connectHRBtn');
+                this.elements.currentHR = document.getElementById('currentHR');
+                this.elements.avgHR = document.getElementById('avgHR');
+                this.elements.maxHR = document.getElementById('maxHR');
                 
                 // Display elements
                 this.elements.classTitle = document.getElementById('classTitle');
@@ -1230,6 +1402,9 @@
                 this.elements.confirmationConfirmBtn = document.getElementById('confirmationConfirmBtn');
                 
                 this.elements.loadingModal = document.getElementById('loadingModal');
+                this.elements.bluetoothModal = document.getElementById('bluetoothModal');
+                this.elements.bluetoothMessage = document.getElementById('bluetoothMessage');
+                this.elements.bluetoothCancelBtn = document.getElementById('bluetoothCancelBtn');
                 
                 // Status indicator
                 this.elements.statusIndicator = document.getElementById('statusIndicator');
@@ -1242,9 +1417,6 @@
                 this.elements.wakeLockBanner = document.getElementById('wakeLockBanner');
             }
             
-            /**
-             * Set up event listeners for all interactive elements
-             */
             setupEventListeners() {
                 // Welcome state buttons
                 this.elements.loadSampleBtn.addEventListener('click', () => this.loadSampleWorkout());
@@ -1259,12 +1431,19 @@
                 this.elements.parseJsonBtn.addEventListener('click', () => this.parseAndLoadJson());
                 this.elements.cancelJsonBtn.addEventListener('click', () => this.hideJsonInput());
                 
+                // Heart Rate button
+                this.elements.connectHRBtn.addEventListener('click', () => this.connectHeartRateMonitor());
+                this.elements.bluetoothCancelBtn.addEventListener('click', () => this.hideModal('bluetoothModal'));
+                
                 // Seek slider
                 this.elements.seekSlider.addEventListener('input', (e) => this.handleSeek(e.target.value));
                 
                 // Modal buttons
                 this.elements.validationOkBtn.addEventListener('click', () => this.hideModal('validationModal'));
-                this.elements.successOkBtn.addEventListener('click', () => this.hideModal('successModal'));
+                this.elements.successOkBtn.addEventListener('click', () => {
+                    this.hideModal('successModal');
+                    this.play();
+                });
                 this.elements.confirmationCancelBtn.addEventListener('click', () => this.cancelConfirmation());
                 this.elements.confirmationConfirmBtn.addEventListener('click', () => this.confirmAction());
                 
@@ -1276,52 +1455,293 @@
                 
                 // Handle page unload
                 window.addEventListener('beforeunload', () => this.cleanup());
+                
+                // Handle Bluetooth disconnection
+                navigator.bluetooth.addEventListener('disconnect', () => {
+                    this.handleBluetoothDisconnect();
+                });
             }
             
             // =============================================
-            // UI STATE MANAGEMENT
+            // HEART RATE MONITORING METHODS
             // =============================================
             
-            /**
-             * Show welcome state (initial empty state)
-             */
+            async connectHeartRateMonitor() {
+                if (!navigator.bluetooth) {
+                    this.showValidationError(
+                        "Bluetooth Not Supported",
+                        "Your browser or device doesn't support Web Bluetooth API. Please use Chrome, Edge, or Opera on a compatible device."
+                    );
+                    return;
+                }
+                
+                try {
+                    this.showModal('bluetoothModal');
+                    this.elements.bluetoothMessage.textContent = "Searching for heart rate monitors...";
+                    
+                    // Request Bluetooth device with heart rate service
+                    const device = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: ['heart_rate'] }],
+                        optionalServices: ['battery_service']
+                    });
+                    
+                    this.elements.bluetoothMessage.textContent = "Connecting to device...";
+                    
+                    // Connect to GATT server
+                    const server = await device.gatt.connect();
+                    
+                    // Get heart rate service
+                    const service = await server.getPrimaryService('heart_rate');
+                    
+                    // Get heart rate measurement characteristic
+                    const characteristic = await service.getCharacteristic('heart_rate_measurement');
+                    
+                    // Store references
+                    this.state.hrDevice = device;
+                    this.state.hrCharacteristic = characteristic;
+                    
+                    // Start notifications
+                    await characteristic.startNotifications();
+                    
+                    // Listen for heart rate data
+                    characteristic.addEventListener('characteristicvaluechanged', 
+                        (event) => this.handleHeartRateData(event));
+                    
+                    // Update UI
+                    this.elements.hrDisplay.classList.remove('hidden');
+                    this.elements.connectHRBtn.innerHTML = '<span class="bluetooth-icon">✅</span> Sensor Connected';
+                    this.elements.connectHRBtn.classList.add('connected');
+                    this.state.hrConnected = true;
+                    
+                    // Initialize chart if not already done
+                    if (!this.state.hrChart) {
+                        this.initializeHeartRateChart();
+                    }
+                    
+                    // Hide modal
+                    this.hideModal('bluetoothModal');
+                    
+                    // Show success
+                    this.showSuccessModal("Heart rate monitor connected successfully!");
+                    
+                } catch (error) {
+                    console.error('Bluetooth connection error:', error);
+                    this.hideModal('bluetoothModal');
+                    
+                    if (error.name === 'NotFoundError') {
+                        this.showValidationError(
+                            "Device Not Found",
+                            "No heart rate monitor found. Make sure your device is turned on and in pairing mode."
+                        );
+                    } else if (error.name === 'SecurityError') {
+                        this.showValidationError(
+                            "Security Error",
+                            "Please check your browser permissions and try again."
+                        );
+                    } else if (error.name === 'NetworkError') {
+                        this.showValidationError(
+                            "Connection Error",
+                            "Could not connect to the device. Make sure it's within range and not connected to another device."
+                        );
+                    } else {
+                        this.showValidationError(
+                            "Connection Failed",
+                            error.message || "An unknown error occurred."
+                        );
+                    }
+                }
+            }
+            
+            handleHeartRateData(event) {
+                const value = event.target.value;
+                const bpm = this.parseHeartRateValue(value);
+                
+                if (bpm > 0) {
+                    this.updateHeartRateDisplay(bpm);
+                    this.updateHeartRateChart(bpm);
+                    this.updateHeartRateStats();
+                }
+            }
+            
+            parseHeartRateValue(value) {
+                try {
+                    const flags = value.getUint8(0);
+                    const rate16Bits = flags & 0x1;
+                    
+                    if (rate16Bits) {
+                        return value.getUint16(1, true);
+                    } else {
+                        return value.getUint8(1);
+                    }
+                } catch (error) {
+                    console.error('Error parsing heart rate:', error);
+                    return 0;
+                }
+            }
+            
+            updateHeartRateDisplay(bpm) {
+                this.elements.hrValue.textContent = bpm;
+                this.elements.currentHR.textContent = bpm;
+                
+                // Color coding based on heart rate intensity
+                if (bpm >= 180) {
+                    this.elements.hrValue.style.color = '#ff4757'; // Red for high intensity
+                } else if (bpm >= 150) {
+                    this.elements.hrValue.style.color = '#f39c12'; // Orange for medium-high
+                } else if (bpm >= 120) {
+                    this.elements.hrValue.style.color = '#2ed573'; // Green for medium
+                } else {
+                    this.elements.hrValue.style.color = '#3498db'; // Blue for low
+                }
+            }
+            
+            initializeHeartRateChart() {
+                const ctx = document.getElementById('hrChart').getContext('2d');
+                
+                this.state.hrChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Heart Rate',
+                            data: [],
+                            borderColor: '#ff4757',
+                            backgroundColor: 'rgba(255, 71, 87, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: false,
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                min: 50,
+                                max: 190,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    callback: function(value) {
+                                        return value + ' BPM';
+                                    }
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'nearest'
+                        },
+                        animation: {
+                            duration: 0 // Disable animation for real-time updates
+                        }
+                    }
+                });
+            }
+            
+            updateHeartRateChart(bpm) {
+                const now = new Date();
+                const timeLabel = now.getMinutes() + ':' + now.getSeconds().toString().padStart(2, '0');
+                
+                // Add new data point
+                this.state.hrHistory.push(bpm);
+                this.state.hrTimestamps.push(timeLabel);
+                
+                // Keep only last N data points
+                if (this.state.hrHistory.length > this.state.maxDataPoints) {
+                    this.state.hrHistory.shift();
+                    this.state.hrTimestamps.shift();
+                }
+                
+                // Update chart
+                if (this.state.hrChart) {
+                    this.state.hrChart.data.labels = this.state.hrTimestamps;
+                    this.state.hrChart.data.datasets[0].data = this.state.hrHistory;
+                    this.state.hrChart.update('none'); // 'none' for no animation
+                }
+            }
+            
+            updateHeartRateStats() {
+                if (this.state.hrHistory.length === 0) return;
+                
+                // Calculate average
+                const sum = this.state.hrHistory.reduce((a, b) => a + b, 0);
+                const avg = Math.round(sum / this.state.hrHistory.length);
+                this.elements.avgHR.textContent = avg;
+                
+                // Calculate max
+                const max = Math.max(...this.state.hrHistory);
+                this.elements.maxHR.textContent = max;
+            }
+            
+            handleBluetoothDisconnect() {
+                this.state.hrConnected = false;
+                this.state.hrDevice = null;
+                this.state.hrCharacteristic = null;
+                
+                this.elements.connectHRBtn.innerHTML = '<span class="bluetooth-icon">📱</span> Connect Heart Rate Monitor';
+                this.elements.connectHRBtn.classList.remove('connected');
+                
+                // Keep chart visible but stop updating
+                this.elements.hrValue.textContent = '--';
+                this.elements.currentHR.textContent = '--';
+                
+                this.showValidationError(
+                    "Device Disconnected",
+                    "Your heart rate monitor has disconnected. Please reconnect if you want to continue monitoring."
+                );
+            }
+            
+            disconnectHeartRateMonitor() {
+                if (this.state.hrDevice && this.state.hrDevice.gatt.connected) {
+                    this.state.hrDevice.gatt.disconnect();
+                }
+                this.handleBluetoothDisconnect();
+            }
+            
+            // =============================================
+            // REST OF THE METHODS (same as before, but integrated)
+            // =============================================
+            
             showWelcomeState() {
                 this.elements.welcomeState.classList.remove('hidden');
                 this.elements.workoutInterface.classList.add('hidden');
             }
             
-            /**
-             * Show workout interface (after loading workout)
-             */
             showWorkoutInterface() {
                 this.elements.welcomeState.classList.add('hidden');
                 this.elements.workoutInterface.classList.remove('hidden');
             }
             
-            /**
-             * Show JSON input area
-             */
             showJsonInput() {
                 this.elements.jsonInputContainer.style.display = 'block';
                 this.elements.jsonTextarea.focus();
             }
             
-            /**
-             * Hide JSON input area
-             */
             hideJsonInput() {
                 this.elements.jsonInputContainer.style.display = 'none';
                 this.elements.jsonTextarea.value = '';
             }
             
-            // =============================================
-            // SAMPLE WORKOUT DATA - FIXED
-            // =============================================
-            
-            /**
-             * Get sample workout data with properly parsed durations
-             * @returns {Object} Sample workout data
-             */
             getSampleWorkout() {
                 return {
                     "classPurpose": "Endurance treadmill run for knee strength",
@@ -1396,9 +1816,6 @@
                 };
             }
             
-            /**
-             * Load sample workout with confirmation if workout is in progress
-             */
             async loadSampleWorkout() {
                 if (this.state.isWorkoutLoaded && (this.state.isPlaying || this.state.totalElapsedTime > 0)) {
                     const confirmed = await this.showConfirmation(
@@ -1409,7 +1826,6 @@
                 }
                 
                 this.showLoadingModal();
-                // Simulate loading delay for better UX
                 setTimeout(() => {
                     const sampleData = this.getSampleWorkout();
                     this.processAndLoadWorkoutData(sampleData);
@@ -1418,9 +1834,6 @@
                 }, 500);
             }
             
-            /**
-             * Confirm loading sample workout
-             */
             async confirmLoadSample() {
                 if (this.state.isPlaying || this.state.totalElapsedTime > 0) {
                     const confirmed = await this.showConfirmation(
@@ -1432,25 +1845,14 @@
                 this.loadSampleWorkout();
             }
             
-            // =============================================
-            // WORKOUT DATA MANAGEMENT - FIXED
-            // =============================================
-            
-            /**
-             * Process workout data to parse durations and validate
-             * @param {Object} workoutData - Workout data to process
-             * @returns {Object} Processed workout data
-             */
             processWorkoutData(workoutData) {
                 if (!workoutData) return null;
                 
-                // Parse class duration
                 const totalClassDuration = this.parseDuration(workoutData.classDuration);
                 workoutData._totalClassDuration = totalClassDuration;
                 
                 let totalIntervalDuration = 0;
                 
-                // Parse each interval duration
                 workoutData.intervalConfigList.forEach((interval, index) => {
                     let intervalDuration = 0;
                     
@@ -1469,15 +1871,13 @@
                     interval._parsedDuration = intervalDuration;
                     totalIntervalDuration += intervalDuration;
                     
-                    // Also store formatted duration for display
                     interval._displayDuration = this.formatTime(intervalDuration);
                 });
                 
                 workoutData._totalIntervalDuration = totalIntervalDuration;
                 
-                // Validate total duration match
                 const durationDiff = Math.abs(totalClassDuration - totalIntervalDuration);
-                if (durationDiff > 1) { // Allow 1 second difference for rounding
+                if (durationDiff > 1) {
                     this.showValidationError(
                         `Total duration mismatch`,
                         `Class duration: ${this.formatTime(totalClassDuration)}\n` +
@@ -1490,10 +1890,6 @@
                 return workoutData;
             }
             
-            /**
-             * Process and load workout data
-             * @param {Object} workoutData - Workout data to process and load
-             */
             processAndLoadWorkoutData(workoutData) {
                 const processedData = this.processWorkoutData(workoutData);
                 if (!processedData) return;
@@ -1501,11 +1897,6 @@
                 this.loadWorkoutData(processedData);
             }
             
-            /**
-             * Parse and validate workout JSON data
-             * @param {string} jsonString - JSON string to parse
-             * @returns {Object} Parsed and validated workout data
-             */
             parseWorkoutJson(jsonString) {
                 try {
                     const data = JSON.parse(jsonString);
@@ -1517,9 +1908,6 @@
                 }
             }
             
-            /**
-             * Parse and load JSON from textarea
-             */
             async parseAndLoadJson() {
                 const jsonString = this.elements.jsonTextarea.value.trim();
                 
@@ -1538,7 +1926,6 @@
                 
                 this.showLoadingModal();
                 
-                // Simulate processing delay
                 setTimeout(() => {
                     const parsedData = this.parseWorkoutJson(jsonString);
                     if (parsedData) {
@@ -1549,59 +1936,30 @@
                 }, 500);
             }
             
-            /**
-             * Load and validate workout data
-             * @param {Object} workoutData - Parsed workout data
-             */
             loadWorkoutData(workoutData) {
                 if (!workoutData) return;
                 
-                // Store workout data
                 this.state.workoutData = workoutData;
                 this.state.isWorkoutLoaded = true;
                 
-                // Reset app state
                 this.resetAppState();
-                
-                // Show workout interface
                 this.showWorkoutInterface();
-                
-                // Update UI with workout data
                 this.updateWorkoutDisplay();
-                
-                // Update current interval and timer display
                 this.updateCurrentIntervalDisplay();
                 this.updateTimerDisplay();
-                
-                // Render interval list WITH PROPER DURATIONS
                 this.renderIntervalList();
-                
-                // Update total time display
                 this.updateTotalTimeDisplay();
                 
-                // Show success message
                 this.showSuccessModal("Workout plan loaded successfully!");
             }
             
-            // =============================================
-            // TIME AND DURATION PARSING
-            // =============================================
-            
-            /**
-             * Parse duration string to seconds
-             * Supports formats: "45 min", "90 sec", "2 min", "1:30", "1h 30m"
-             * @param {string} durationStr - Duration string to parse
-             * @returns {number} Duration in seconds
-             */
             parseDuration(durationStr) {
                 if (!durationStr) return 0;
                 
                 const str = durationStr.toLowerCase().trim();
                 let totalSeconds = 0;
                 
-                // Try different patterns
                 const patterns = [
-                    // Pattern 1: "45 min" or "90 sec"
                     { regex: /(\d+(?:\.\d+)?)\s*(min|minute|m|sec|second|s)/, 
                       handler: (match) => {
                           const value = parseFloat(match[1]);
@@ -1609,8 +1967,6 @@
                           return unit.startsWith('min') ? value * 60 : value;
                       }
                     },
-                    
-                    // Pattern 2: "hh:mm:ss" or "mm:ss"
                     { regex: /(\d+):(\d+):(\d+)/,
                       handler: (match) => {
                           const hours = parseInt(match[1]);
@@ -1619,8 +1975,6 @@
                           return hours * 3600 + minutes * 60 + seconds;
                       }
                     },
-                    
-                    // Pattern 3: "mm:ss"
                     { regex: /(\d+):(\d+)/,
                       handler: (match) => {
                           const minutes = parseInt(match[1]);
@@ -1628,14 +1982,11 @@
                           return minutes * 60 + seconds;
                       }
                     },
-                    
-                    // Pattern 4: Just a number (assume minutes)
                     { regex: /^(\d+(?:\.\d+)?)$/,
                       handler: (match) => parseFloat(match[1]) * 60
                     }
                 ];
                 
-                // Try each pattern
                 for (const pattern of patterns) {
                     const match = str.match(pattern.regex);
                     if (match) {
@@ -1647,12 +1998,6 @@
                 return Math.round(totalSeconds);
             }
             
-            /**
-             * Format seconds to time string
-             * @param {number} seconds - Time in seconds
-             * @param {boolean} showHours - Whether to show hours
-             * @returns {string} Formatted time string
-             */
             formatTime(seconds, showHours = false) {
                 const hrs = Math.floor(seconds / 3600);
                 const mins = Math.floor((seconds % 3600) / 60);
@@ -1664,16 +2009,6 @@
                 return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
             
-            // =============================================
-            // CONFIGURATION PARSING
-            // =============================================
-            
-            /**
-             * Parse multi-level configuration strings (speed, incline, weight)
-             * Supports formats: "3.5 mph | hard: 4.0 mph | careful: 4.5 mph"
-             * @param {string} configStr - Configuration string to parse
-             * @returns {Array} Array of configuration levels
-             */
             parseMultiLevelConfig(configStr) {
                 if (!configStr) return [];
                 
@@ -1681,14 +2016,12 @@
                 const parts = configStr.split('|').map(part => part.trim());
                 
                 parts.forEach(part => {
-                    // Check if it has a label (e.g., "hard: 4.0 mph")
                     const colonIndex = part.indexOf(':');
                     if (colonIndex > 0) {
                         const label = part.substring(0, colonIndex).trim();
                         const value = part.substring(colonIndex + 1).trim();
                         levels.push({ label, value });
                     } else {
-                        // No label, just a value
                         levels.push({ label: '', value: part });
                     }
                 });
@@ -1696,11 +2029,6 @@
                 return levels;
             }
             
-            /**
-             * Create HTML for multi-level configuration display
-             * @param {Array} levels - Array of configuration levels
-             * @returns {string} HTML string
-             */
             createMultiLevelHTML(levels) {
                 if (!levels || levels.length === 0) return '<div class="config-value">N/A</div>';
                 
@@ -1708,10 +2036,8 @@
                 
                 levels.forEach((level, index) => {
                     if (index === 0) {
-                        // First level is the main/default value
                         html += `<div class="config-value">${level.value}</div>`;
                     } else {
-                        // Additional levels as options
                         html += `
                             <div class="config-level">
                                 <div class="config-level-title">${level.label || 'Option'}</div>
@@ -1724,13 +2050,6 @@
                 return html;
             }
             
-            // =============================================
-            // TIMER CONTROL METHODS - FIXED WITH AUTO-CONTINUE
-            // =============================================
-            
-            /**
-             * Toggle between play and pause states
-             */
             togglePlayPause() {
                 if (this.state.isPlaying) {
                     this.pause();
@@ -1739,23 +2058,18 @@
                 }
             }
             
-            /**
-             * Start the workout timer
-             */
             play() {
                 if (this.state.isPlaying || !this.state.isWorkoutLoaded) return;
                 
                 this.state.isPlaying = true;
-                this.state.autoContinue = true; // Enable auto-continue
+                this.state.autoContinue = true;
                 this.updateStatus('active');
                 
-                // Start the timer
                 this.state.intervalTimer = setInterval(() => {
                     this.state.currentTime++;
                     this.state.totalElapsedTime++;
                     this.updateTimerDisplay();
                     
-                    // Check if interval is complete
                     const currentInterval = this.getCurrentInterval();
                     if (currentInterval && this.state.currentTime >= currentInterval._parsedDuration) {
                         this.nextInterval();
@@ -1763,33 +2077,24 @@
                     
                 }, 1000);
                 
-                // Request wake lock
                 this.requestWakeLock();
             }
             
-            /**
-             * Pause the workout timer
-             */
             pause() {
                 if (!this.state.isPlaying) return;
                 
                 this.state.isPlaying = false;
-                this.state.autoContinue = false; // Disable auto-continue when user manually pauses
+                this.state.autoContinue = false;
                 this.updateStatus('paused');
                 
-                // Clear the timer
                 if (this.state.intervalTimer) {
                     clearInterval(this.state.intervalTimer);
                     this.state.intervalTimer = null;
                 }
                 
-                // Release wake lock
                 this.releaseWakeLock();
             }
             
-            /**
-             * Confirm restart action
-             */
             async confirmRestart() {
                 if (this.state.isPlaying || this.state.totalElapsedTime > 0) {
                     const confirmed = await this.showConfirmation(
@@ -1801,9 +2106,6 @@
                 this.restart();
             }
             
-            /**
-             * Restart the workout from beginning
-             */
             restart() {
                 this.pause();
                 this.state.currentIntervalIndex = 0;
@@ -1816,21 +2118,15 @@
                 this.updateStatus('stopped');
             }
             
-            /**
-             * Move to the next interval - WITH AUTO-CONTINUE
-             */
             nextInterval() {
                 const intervals = this.state.workoutData?.intervalConfigList;
                 if (!intervals) return;
                 
-                // Show transition effect
                 this.showIntervalTransition();
                 
-                // Move to next interval
                 this.state.currentIntervalIndex++;
                 this.state.currentTime = 0;
                 
-                // If we've completed all intervals, stop
                 if (this.state.currentIntervalIndex >= intervals.length) {
                     this.pause();
                     this.updateStatus('completed');
@@ -1838,37 +2134,23 @@
                     return;
                 }
                 
-                // Update displays
                 this.updateCurrentIntervalDisplay();
                 this.updateTimerDisplay();
                 this.updateIntervalList();
-                
-                // Play transition sound
                 this.playTransitionSound();
                 
-                // AUTO-CONTINUE: If we were playing before, continue playing
                 if (this.state.autoContinue && !this.state.isPlaying) {
-                    // Small delay to allow transition effect to show
                     setTimeout(() => {
                         this.play();
                     }, 100);
                 }
             }
             
-            // =============================================
-            // HANDLE INTERVAL SWITCHING - FIXED
-            // =============================================
-            
-            /**
-             * Handle seek slider input - ALWAYS AUTO-CONTINUE
-             */
             handleSeek(percentage) {
                 if (!this.state.isWorkoutLoaded) return;
                 
-                // Remember if we were playing
                 const wasPlaying = this.state.isPlaying;
                 
-                // Temporarily pause while seeking
                 if (this.state.isPlaying) {
                     this.state.isPlaying = false;
                     if (this.state.intervalTimer) {
@@ -1881,7 +2163,6 @@
                 const totalDuration = this.state.workoutData?._totalClassDuration || 0;
                 const targetTime = Math.round((percentage / 100) * totalDuration);
                 
-                // Find which interval this time corresponds to
                 let accumulatedTime = 0;
                 let intervalIndex = 0;
                 let intervalTime = 0;
@@ -1901,38 +2182,28 @@
                     accumulatedTime += intervalDuration;
                 }
                 
-                // Update state
                 this.state.currentIntervalIndex = intervalIndex;
                 this.state.currentTime = intervalTime;
                 this.state.totalElapsedTime = targetTime;
                 
-                // Update displays
                 this.updateCurrentIntervalDisplay();
                 this.updateTimerDisplay();
                 this.updateIntervalList();
                 
-                // Update percentage display
                 this.elements.seekPercentage.textContent = `${percentage}%`;
                 
-                // ALWAYS AUTO-CONTINUE if it was playing before
                 if (wasPlaying) {
-                    // Small delay for smooth transition
                     setTimeout(() => {
                         this.play();
                     }, 100);
                 }
             }
             
-            /**
-             * Jump to specific interval - ALWAYS AUTO-CONTINUE
-             */
             async jumpToInterval(index) {
                 if (index < 0 || index >= (this.state.workoutData?.intervalConfigList.length || 0)) return;
                 
-                // Remember if we were playing
                 const wasPlaying = this.state.isPlaying;
                 
-                // Temporarily pause while switching
                 if (this.state.isPlaying) {
                     this.state.isPlaying = false;
                     if (this.state.intervalTimer) {
@@ -1942,39 +2213,27 @@
                     this.updateStatus('paused');
                 }
                 
-                // Calculate total elapsed time up to this interval
                 let elapsedTime = 0;
                 for (let i = 0; i < index; i++) {
                     elapsedTime += this.state.workoutData.intervalConfigList[i]._parsedDuration || 0;
                 }
                 
-                // Update state
                 this.state.currentIntervalIndex = index;
                 this.state.currentTime = 0;
                 this.state.totalElapsedTime = elapsedTime;
                 
-                // Update displays
                 this.updateCurrentIntervalDisplay();
                 this.updateTimerDisplay();
                 this.updateIntervalList();
                 this.updateStatus('stopped');
                 
-                // ALWAYS AUTO-CONTINUE if it was playing before
                 if (wasPlaying) {
-                    // Small delay for smooth transition
                     setTimeout(() => {
                         this.play();
                     }, 100);
                 }
             }
             
-            // =============================================
-            // UI UPDATE METHODS
-            // =============================================
-            
-            /**
-             * Update all UI elements based on current state
-             */
             render() {
                 this.updateCurrentIntervalDisplay();
                 this.updateTimerDisplay();
@@ -1983,9 +2242,6 @@
                 this.updateStatus('stopped');
             }
             
-            /**
-             * Update current interval display with multi-level support
-             */
             updateCurrentIntervalDisplay() {
                 const intervals = this.state.workoutData?.intervalConfigList;
                 if (!intervals || intervals.length === 0) return;
@@ -1993,18 +2249,14 @@
                 const currentInterval = intervals[this.state.currentIntervalIndex];
                 if (!currentInterval) return;
                 
-                // Update interval type
                 this.elements.currentIntervalType.textContent = currentInterval.intervalType;
                 
-                // Update progress indicator
                 this.elements.currentIntervalProgress.textContent = 
                     `${this.state.currentIntervalIndex + 1} of ${intervals.length}`;
                 
-                // Update configuration display with multi-level support
                 let configHtml = '';
                 
                 if (currentInterval.treadmillConfig) {
-                    // Parse multi-level speed
                     const speedLevels = this.parseMultiLevelConfig(currentInterval.treadmillConfig.speed);
                     const inclineLevels = this.parseMultiLevelConfig(currentInterval.treadmillConfig.incline);
                     
@@ -2023,12 +2275,10 @@
                         </div>
                     `;
                     
-                    // Update notes
                     const notes = currentInterval.treadmillConfig.notes || '';
                     this.updateNotesDisplay(notes);
                     
                 } else if (currentInterval.floorExerciseConfig) {
-                    // Parse multi-level weight
                     const weightLevels = this.parseMultiLevelConfig(currentInterval.floorExerciseConfig.weight);
                     
                     configHtml = `
@@ -2046,12 +2296,10 @@
                         </div>
                     `;
                     
-                    // Update notes
                     const notes = currentInterval.floorExerciseConfig.notes || '';
                     this.updateNotesDisplay(notes);
                     
                 } else {
-                    // For rest intervals
                     configHtml = `
                         <div class="config-item">
                             <div class="config-label">Type</div>
@@ -2068,12 +2316,9 @@
                 
                 this.elements.currentIntervalConfig.innerHTML = configHtml;
                 
-                // Update next interval display
                 const nextInterval = intervals[this.state.currentIntervalIndex + 1];
                 if (nextInterval) {
                     this.elements.nextIntervalType.textContent = nextInterval.intervalType;
-                    
-                    // Update next interval configuration
                     this.updateNextIntervalConfig(nextInterval);
                 } else {
                     this.elements.nextIntervalType.textContent = 'Workout Complete';
@@ -2081,9 +2326,6 @@
                 }
             }
             
-            /**
-             * Update the timer display with total countdown
-             */
             updateTimerDisplay() {
                 const currentInterval = this.getCurrentInterval();
                 if (!currentInterval) return;
@@ -2091,46 +2333,33 @@
                 const intervalDuration = currentInterval._parsedDuration || 0;
                 const timeRemaining = Math.max(0, intervalDuration - this.state.currentTime);
                 
-                // Update interval timer display
                 this.elements.intervalTimer.textContent = this.formatTime(timeRemaining);
                 
-                // Update progress bar
                 const progressPercentage = intervalDuration > 0 ? 
                     Math.min(100, (this.state.currentTime / intervalDuration) * 100) : 0;
                 this.elements.timerProgressBar.style.width = `${progressPercentage}%`;
                 
-                // Update total remaining time
                 const totalDuration = this.state.workoutData?._totalClassDuration || 0;
                 const totalRemaining = Math.max(0, totalDuration - this.state.totalElapsedTime);
                 this.elements.totalRemainingTime.textContent = this.formatTime(totalRemaining);
                 
-                // Update time displays
                 this.elements.currentTime.textContent = this.formatTime(this.state.totalElapsedTime, true);
                 
-                // Update seek slider
                 const seekPercentage = totalDuration > 0 ? 
                     Math.min(100, Math.round((this.state.totalElapsedTime / totalDuration) * 100)) : 0;
                 this.elements.seekSlider.value = seekPercentage;
                 this.elements.seekPercentage.textContent = `${seekPercentage}%`;
             }
             
-            /**
-             * Update total time display
-             */
             updateTotalTimeDisplay() {
                 if (!this.state.workoutData) return;
                 
                 const totalDuration = this.state.workoutData._totalClassDuration || 0;
                 this.elements.totalTime.textContent = this.formatTime(totalDuration, true);
                 
-                // Update class duration display
                 this.elements.classDuration.textContent = this.state.workoutData.classDuration || 'N/A';
             }
             
-            /**
-             * Update notes display
-             * @param {string} notes - Notes to display
-             */
             updateNotesDisplay(notes) {
                 const notesElement = this.elements.currentIntervalNotes.querySelector('.notes-content');
                 if (notesElement) {
@@ -2138,10 +2367,6 @@
                 }
             }
             
-            /**
-             * Update next interval configuration display with multi-level support
-             * @param {Object} nextInterval - Next interval data
-             */
             updateNextIntervalConfig(nextInterval) {
                 let configHtml = '';
                 
@@ -2162,7 +2387,6 @@
                         </div>
                     `;
                     
-                    // Update next interval notes
                     const notes = nextInterval.treadmillConfig.notes || '';
                     this.updateNextIntervalNotes(notes);
                     
@@ -2205,9 +2429,6 @@
                 this.elements.nextIntervalConfig.innerHTML = configHtml;
             }
             
-            /**
-             * Clear next interval configuration
-             */
             clearNextIntervalConfig() {
                 this.elements.nextIntervalConfig.innerHTML = '';
                 const notesElement = this.elements.nextIntervalNotes.querySelector('.notes-content');
@@ -2216,10 +2437,6 @@
                 }
             }
             
-            /**
-             * Update next interval notes
-             * @param {string} notes - Notes for next interval
-             */
             updateNextIntervalNotes(notes) {
                 const notesElement = this.elements.nextIntervalNotes.querySelector('.notes-content');
                 if (notesElement) {
@@ -2227,21 +2444,15 @@
                 }
             }
             
-            /**
-             * Update workout header information
-             */
             updateWorkoutDisplay() {
                 const data = this.state.workoutData;
                 if (!data) return;
                 
-                // Update class title
                 this.elements.classTitle.textContent = data.classPurpose;
                 
-                // Update user info
                 this.elements.userInfo.textContent = 
                     `${data.userAge} years, ${data.userWeight}, ${data.userHeight}`;
                 
-                // Update other info
                 this.elements.userLocation.textContent = data.userlocation;
                 this.elements.classDate.textContent = new Date(data.classDate).toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -2251,9 +2462,6 @@
                 this.elements.classDuration.textContent = data.classDuration;
             }
             
-            /**
-             * Render the interval list WITH PROPER DURATIONS
-             */
             renderIntervalList() {
                 const intervals = this.state.workoutData?.intervalConfigList;
                 if (!intervals) return;
@@ -2261,7 +2469,6 @@
                 let html = '';
                 
                 intervals.forEach((interval, index) => {
-                    // Use the pre-parsed duration that should now be available
                     const duration = interval._parsedDuration || 0;
                     const displayDuration = interval._displayDuration || this.formatTime(duration);
                     
@@ -2270,11 +2477,9 @@
                     
                     let configInfo = '';
                     if (interval.treadmillConfig) {
-                        // Get first speed level for display
                         const speedLevels = this.parseMultiLevelConfig(interval.treadmillConfig.speed);
                         configInfo = speedLevels.length > 0 ? speedLevels[0].value : 'N/A';
                     } else if (interval.floorExerciseConfig) {
-                        // Get first weight level for display
                         const weightLevels = this.parseMultiLevelConfig(interval.floorExerciseConfig.weight);
                         configInfo = weightLevels.length > 0 ? weightLevels[0].value : 'N/A';
                     } else {
@@ -2296,19 +2501,14 @@
                 this.elements.intervalListContainer.innerHTML = html;
                 this.elements.intervalListCount.textContent = `${intervals.length} intervals`;
                 
-                // Add click event to interval items - REMOVED CONFIRMATION
                 this.elements.intervalListContainer.querySelectorAll('.interval-item').forEach(item => {
                     item.addEventListener('click', (e) => {
                         const index = parseInt(e.currentTarget.dataset.index);
-                        // Directly jump to interval without confirmation
                         this.jumpToInterval(index);
                     });
                 });
             }
             
-            /**
-             * Update interval list highlights
-             */
             updateIntervalList() {
                 const items = this.elements.intervalListContainer.querySelectorAll('.interval-item');
                 
@@ -2317,7 +2517,6 @@
                     
                     if (index === this.state.currentIntervalIndex) {
                         item.classList.add('active');
-                        // Scroll into view if not visible
                         item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else if (index < this.state.currentIntervalIndex) {
                         item.classList.add('past');
@@ -2325,10 +2524,6 @@
                 });
             }
             
-            /**
-             * Update status indicator
-             * @param {string} status - Status: 'active', 'paused', 'stopped', 'completed'
-             */
             updateStatus(status) {
                 const statusIndicator = this.elements.statusIndicator;
                 const statusText = this.elements.classStatus;
@@ -2354,21 +2549,10 @@
                 }
             }
             
-            // =============================================
-            // HELPER METHODS
-            // =============================================
-            
-            /**
-             * Get current interval data
-             * @returns {Object} Current interval data
-             */
             getCurrentInterval() {
                 return this.state.workoutData?.intervalConfigList[this.state.currentIntervalIndex];
             }
             
-            /**
-             * Reset app state
-             */
             resetAppState() {
                 this.pause();
                 this.state.currentIntervalIndex = 0;
@@ -2377,30 +2561,14 @@
                 this.state.autoContinue = false;
             }
             
-            // =============================================
-            // MODAL METHODS
-            // =============================================
-            
-            /**
-             * Show loading modal
-             */
             showLoadingModal() {
                 this.showModal('loadingModal');
             }
             
-            /**
-             * Hide loading modal
-             */
             hideLoadingModal() {
                 this.hideModal('loadingModal');
             }
             
-            /**
-             * Show confirmation modal
-             * @param {string} title - Confirmation title
-             * @param {string} message - Confirmation message
-             * @returns {Promise} Resolves to true if confirmed, false if cancelled
-             */
             showConfirmation(title, message) {
                 return new Promise((resolve) => {
                     this.elements.confirmationTitle.textContent = title;
@@ -2410,9 +2578,6 @@
                 });
             }
             
-            /**
-             * Confirm action in confirmation modal
-             */
             confirmAction() {
                 if (this.confirmationCallback) {
                     this.confirmationCallback(true);
@@ -2421,9 +2586,6 @@
                 this.hideModal('confirmationModal');
             }
             
-            /**
-             * Cancel action in confirmation modal
-             */
             cancelConfirmation() {
                 if (this.confirmationCallback) {
                     this.confirmationCallback(false);
@@ -2432,30 +2594,17 @@
                 this.hideModal('confirmationModal');
             }
             
-            /**
-             * Show validation error modal
-             * @param {string} title - Error title
-             * @param {string} details - Error details
-             */
             showValidationError(title, details) {
                 this.elements.validationMessage.textContent = title;
                 this.elements.validationDetails.textContent = details;
                 this.showModal('validationModal');
             }
             
-            /**
-             * Show success modal
-             * @param {string} message - Success message
-             */
             showSuccessModal(message) {
                 this.elements.successMessage.textContent = message;
                 this.showModal('successModal');
             }
             
-            /**
-             * Show modal
-             * @param {string} modalId - Modal element ID
-             */
             showModal(modalId) {
                 const modal = document.getElementById(modalId);
                 if (modal) {
@@ -2463,10 +2612,6 @@
                 }
             }
             
-            /**
-             * Hide modal
-             * @param {string} modalId - Modal element ID
-             */
             hideModal(modalId) {
                 const modal = document.getElementById(modalId);
                 if (modal) {
@@ -2474,33 +2619,20 @@
                 }
             }
             
-            // =============================================
-            // INTERVAL TRANSITION EFFECTS
-            // =============================================
-            
-            /**
-             * Show interval transition animation
-             */
             showIntervalTransition() {
                 const transitionElement = this.elements.intervalTransition;
                 transitionElement.classList.add('active');
                 
-                // Remove the class after animation completes
                 setTimeout(() => {
                     transitionElement.classList.remove('active');
                 }, 2000);
             }
             
-            /**
-             * Play transition sound
-             */
             playTransitionSound() {
-                // Create audio context if not already created
                 if (!this.audioContext) {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
                 
-                // Create a simple beep sound
                 const oscillator = this.audioContext.createOscillator();
                 const gainNode = this.audioContext.createGain();
                 
@@ -2517,38 +2649,25 @@
                 oscillator.stop(this.audioContext.currentTime + 0.5);
             }
             
-            // =============================================
-            // WAKE LOCK MANAGEMENT
-            // =============================================
-            
-            /**
-             * Setup wake lock functionality
-             */
             async setupWakeLock() {
-                // Check if wake lock is supported
                 if ('wakeLock' in navigator) {
                     try {
-                        // Request wake lock when workout starts
+                        // Wake lock setup
                     } catch (err) {
                         console.warn('Wake Lock API error:', err);
                     }
                 } else {
                     console.log('Wake Lock API not supported');
-                    // Show message to user
                     this.elements.wakeLockBanner.style.display = 'none';
                 }
             }
             
-            /**
-             * Request wake lock to prevent screen sleep
-             */
             async requestWakeLock() {
                 if ('wakeLock' in navigator) {
                     try {
                         this.state.wakeLock = await navigator.wakeLock.request('screen');
                         this.elements.wakeLockBanner.style.display = 'flex';
                         
-                        // Handle wake lock release
                         this.state.wakeLock.addEventListener('release', () => {
                             console.log('Wake Lock was released');
                             this.elements.wakeLockBanner.style.display = 'none';
@@ -2561,9 +2680,6 @@
                 }
             }
             
-            /**
-             * Release wake lock
-             */
             async releaseWakeLock() {
                 if (this.state.wakeLock) {
                     try {
@@ -2576,58 +2692,43 @@
                 }
             }
             
-            /**
-             * Handle visibility change (reacquire wake lock if needed)
-             */
             async handleVisibilityChange() {
                 if (this.state.isPlaying && this.state.wakeLock !== null && document.visibilityState === 'visible') {
                     await this.requestWakeLock();
                 }
             }
             
-            // =============================================
-            // KEYBOARD SHORTCUTS
-            // =============================================
-            
-            /**
-             * Handle keyboard shortcuts
-             * @param {KeyboardEvent} e - Keyboard event
-             */
             handleKeyboardShortcuts(e) {
-                // Prevent default for space bar to avoid page scrolling
                 if (e.code === 'Space') {
                     e.preventDefault();
                     this.togglePlayPause();
                 }
                 
-                // N for next interval
                 if (e.code === 'KeyN' && e.ctrlKey) {
                     e.preventDefault();
                     this.nextInterval();
                 }
                 
-                // R for restart
                 if (e.code === 'KeyR' && e.ctrlKey) {
                     e.preventDefault();
                     this.confirmRestart();
                 }
                 
-                // Escape to pause
                 if (e.code === 'Escape') {
                     this.pause();
                 }
+                
+                // Bluetooth shortcut: Ctrl+B
+                if (e.code === 'KeyB' && e.ctrlKey) {
+                    e.preventDefault();
+                    this.connectHeartRateMonitor();
+                }
             }
             
-            // =============================================
-            // CLEANUP METHODS
-            // =============================================
-            
-            /**
-             * Cleanup resources before page unload
-             */
             cleanup() {
                 this.pause();
                 this.releaseWakeLock();
+                this.disconnectHeartRateMonitor();
                 
                 if (this.audioContext) {
                     this.audioContext.close();
@@ -2635,16 +2736,10 @@
             }
         }
         
-        // =============================================
-        // INITIALIZE APPLICATION
-        // =============================================
-        
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            // Create and initialize the HIIT Program Assistant
             window.hiitApp = new HIITProgramAssistant();
             
-            // Add CSS for no-select on buttons for better mobile experience
             const style = document.createElement('style');
             style.textContent = `
                 button {
@@ -2665,10 +2760,6 @@
             `;
             document.head.appendChild(style);
         });
-        
-        // =============================================
-        // PWA FEATURES
-        // =============================================
         
         // Register service worker for PWA capabilities
         if ('serviceWorker' in navigator) {
