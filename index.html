@@ -1744,76 +1744,132 @@
             
             getSampleWorkout() {
                 return {
-                    "classPurpose": "Endurance treadmill run for knee strength",
-                    "userAge": 36,
-                    "userlocation": "Carrollton, TX",
-                    "userWeight": "73 kg",
-                    "userHeight": "5 ft 10 in",
-                    "classDate": "2024-07-16",
-                    "classDuration": "45 min",
-                    "intervalConfigList": [
-                        {
-                            "intervalType": "Treadmill Warm-up",
-                            "treadmillConfig": {
-                                "incline": "1% | 2% for advanced",
-                                "speed": "3.5 mph | hard: 4.0 mph | careful: 4.5 mph",
-                                "duration": "5 min"
-                            }
-                        },
-                        {
-                            "intervalType": "Endurance Run",
-                            "treadmillConfig": {
-                                "incline": "1% | progressive: 2%",
-                                "speed": "5.5 mph | challenge: 6.0 mph",
-                                "duration": "25 min"
-                            }
-                        },
-                        {
-                            "intervalType": "Treadmill Cool-down",
-                            "treadmillConfig": {
-                                "incline": "0% | gradual: 1% to 0%",
-                                "speed": "2.5 mph | slow: 2.0 mph",
-                                "duration": "3 min"
-                            }
-                        },
-                        {
-                            "intervalType": "Water / no-exercise break",
-                            "duration": "60 sec"
-                        },
-                        {
-                            "intervalType": "Left Lateral Shuffle on Treadmill",
-                            "treadmillConfig": {
-                                "incline": "0% | slight: 1%",
-                                "speed": "3.0 mph | controlled: 2.5 mph",
-                                "duration": "3 min",
-                                "notes": "keep your butt parallel to the floor"
-                            }
-                        },
-                        {
-                            "intervalType": "Right Lateral Shuffle on Treadmill",
-                            "treadmillConfig": {
-                                "incline": "0% | slight: 1%",
-                                "speed": "3.0 mph | controlled: 2.5 mph",
-                                "duration": "3 min",
-                                "notes": "keep your butt parallel to the floor"
-                            }
-                        },
-                        {
-                            "intervalType": "Water / no-exercise break",
-                            "duration": "2 min",
-                            "notes": "switch to floor exercises next"
-                        },
-                        {
-                            "intervalType": "Chest press with dumbbells",
-                            "floorExerciseConfig": {
-                                "weight": "15 lbs | light: 10 lbs | heavy: 20 lbs",
-                                "reps": "8 to 15",
-                                "duration": "3 min",
-                                "notes": "if completed early, stretch chest / jumping jacks"
-                            }
-                        }
-                    ]
-                };
+  "classPurpose": "Glute‑recovery HIIT + treadmill endurance – protect right glute",
+  "userAge": 36,
+  "userlocation": "Carrollton, TX",
+  "userWeight": "159 lbs",
+  "userHeight": "5 ft 10 in",
+  "classDate": "2026-04-04",
+  "classDuration": "60 min",
+  "heartRateZones": {
+    "zone1_WarmUp": "110–120 bpm",
+    "zone2_Endurance": "130–145 bpm",
+    "zone3_Strength": "120–135 bpm",
+    "zone4_CoolDown": "<110 bpm"
+  },
+  "intervalConfigList": [
+    {
+      "intervalType": "Treadmill Warm-up",
+      "treadmillConfig": {
+        "incline": "0%",
+        "speed": "3.0 mph",
+        "duration": "6 min",
+        "notes": "Land heel, roll, push off with big toe + second toe. Squeeze right glute at toe‑off. No handrails."
+      }
+    },
+    {
+      "intervalType": "Glute bridge activation",
+      "floorExerciseConfig": {
+        "reps": "15 double + 5 single (right)",
+        "duration": "1 min",
+        "notes": "Double‑leg: both knees folded. Single‑leg right: right knee folded, left leg straight. Extend right hip to lift – squeeze glute."
+      }
+    },
+    {
+      "intervalType": "Treadmill endurance run",
+      "treadmillConfig": {
+        "incline": "1%",
+        "speed": "5.0 mph",
+        "duration": "12 min",
+        "notes": "Short stride, land under hips. Push off with right big toe."
+      }
+    },
+    {
+      "intervalType": "Active recovery walk",
+      "treadmillConfig": {
+        "incline": "0%",
+        "speed": "2.5 mph",
+        "duration": "2 min",
+        "notes": "Maintain heel‑toe roll."
+      }
+    },
+    {
+      "intervalType": "Treadmill run second set",
+      "treadmillConfig": {
+        "incline": "1%",
+        "speed": "5.2 mph",
+        "duration": "8 min",
+        "notes": "Same cues. Stop if low back or right hamstring tightens."
+      }
+    },
+    {
+      "intervalType": "Water break",
+      "duration": "90 sec",
+      "notes": "Drink water. Do 5 standing right glute squeezes (hold 3 sec)."
+    },
+    {
+      "intervalType": "Single‑leg leg press (right side)",
+      "floorExerciseConfig": {
+        "weight": "45 lbs (sled only)",
+        "reps": "12",
+        "duration": "4 min",
+        "notes": "Machine: Precision Linear Leg Press. Feet high & wide. Right leg: fold (bend knee to chest) → extend (straighten knee & hip). Left leg rests straight. Push through heel, squeeze right glute at top."
+      }
+    },
+    {
+      "intervalType": "Seated leg curl (machine) – light activation",
+      "floorExerciseConfig": {
+        "weight": "30–40 lbs",
+        "reps": "10",
+        "duration": "2 min",
+        "notes": "Machine: Hoist ROC‑IT Seated Leg Curl. Light weight only – wakes up hamstring‑glute connection. Do not go heavy."
+      }
+    },
+    {
+      "intervalType": "Dumbbell glute bridge (floor)",
+      "floorExerciseConfig": {
+        "weight": "25 lbs across hips",
+        "reps": "12",
+        "duration": "2 min",
+        "notes": "Lie on back, knees bent (folded), feet flat. Hold dumbbell across hips. Extend hips up – squeeze right glute at top. Lower slowly."
+      }
+    },
+    {
+      "intervalType": "Dumbbell RDL (single‑leg right)",
+      "floorExerciseConfig": {
+        "weight": "15 lbs in left hand",
+        "reps": "8 per leg",
+        "duration": "3 min",
+        "notes": "Right leg slightly folded (soft knee), left leg extends straight back. Hinge at hip, keep back flat. Squeeze right glute to return."
+      }
+    },
+    {
+      "intervalType": "Smith machine hip thrust",
+      "floorExerciseConfig": {
+        "weight": "45 lbs (bar only)",
+        "reps": "12",
+        "duration": "4 min",
+        "notes": "Machine: Smith Machine. Shoulders on bench, bar across hips. Both legs start folded (knees 90°). Extend both hips up – squeeze right glute at top. No lower back arch."
+      }
+    },
+    {
+      "intervalType": "Treadmill cool-down",
+      "treadmillConfig": {
+        "incline": "0%",
+        "speed": "2.5 mph → 2.0 mph last 2 min",
+        "duration": "5 min",
+        "notes": "Smooth heel‑toe roll. After stop: 10 right glute squeezes."
+      }
+    },
+    {
+      "intervalType": "Final stretch",
+      "floorExerciseConfig": {
+        "duration": "3 min",
+        "notes": "Figure‑4 right: right ankle over left knee (right folded, left straight) 30 sec. Kneeling hip flexor stretch right 30 sec. Seated forward fold 30 sec. No bouncing."
+      }
+    }
+  ]
+};
             }
             
             async loadSampleWorkout() {
